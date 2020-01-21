@@ -1,4 +1,4 @@
-1. Nicole Wang
+1. Nicole Wang, Lin Li
 2. /cygdrive/h/cse532/wrapper_facade/x64/Debug
 3. Hello World
 4. 
