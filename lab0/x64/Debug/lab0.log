@@ -1,0 +1,12 @@
+﻿  lab0.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.22.27905\include\memory(2066,1): error C2661:  'std::tuple<void (__cdecl *)(play &,const std::string &,std::ifstream &),play,std::basic_string<char,std::char_traits<char>,std::allocator<char>>,std::basic_ifstream<char,std::char_traits<char>>>::tuple': no overloaded function takes 4 arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.22.27905\include\thread(54): message :  see reference to function template instantiation 'std::unique_ptr<_Tuple,std::default_delete<_Ty>> std::make_unique<_Tuple,void(__cdecl &)(play &,const std::string &,std::ifstream &),play&,std::string&,std::ifstream&,0>(void (__cdecl &)(play &,const std::string &,std::ifstream &),play &,std::string &,std::ifstream &)' being compiled
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.22.27905\include\thread(54): message :         with
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.22.27905\include\thread(54): message :         [
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.22.27905\include\thread(54): message :             _Ty=_Tuple
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.22.27905\include\thread(54): message :         ]
+H:\cse532\lab0\lab0.cpp(117): message :  see reference to function template instantiation 'std::thread::thread<void(__cdecl &)(play &,const std::string &,std::ifstream &),play&,std::string&,std::ifstream&,void>(_Fn,play &,std::string &,std::ifstream &)' being compiled
+H:\cse532\lab0\lab0.cpp(117): message :         with
+H:\cse532\lab0\lab0.cpp(117): message :         [
+H:\cse532\lab0\lab0.cpp(117): message :             _Fn=void (__cdecl &)(play &,const std::string &,std::ifstream &)
+H:\cse532\lab0\lab0.cpp(117): message :         ]
