@@ -1,0 +1,19 @@
+﻿  monitor_object.cpp
+H:\cse532\monitor_object\monitor_object.h(14,1): warning C4346:  'size_type': dependent name is not a type
+H:\cse532\monitor_object\monitor_object.h(14,1): message :  prefix with 'typename' to indicate a type
+H:\cse532\monitor_object\monitor_object.h(25): message :  see reference to class template instantiation 'synchronized_list<T>' being compiled
+H:\cse532\monitor_object\monitor_object.h(14,1): error C2061:  syntax error: identifier 'size_type'
+H:\cse532\monitor_object\monitor_object.h(14,1): error C2238:  unexpected token(s) preceding ';'
+H:\cse532\monitor_object\monitor_object.h(15,1): warning C4346:  'size_type': dependent name is not a type
+H:\cse532\monitor_object\monitor_object.h(15,1): message :  prefix with 'typename' to indicate a type
+H:\cse532\monitor_object\monitor_object.h(15,1): error C2061:  syntax error: identifier 'size_type'
+H:\cse532\monitor_object\monitor_object.h(15,1): error C2238:  unexpected token(s) preceding ';'
+H:\cse532\monitor_object\monitor_object.h(19,1): warning C4346:  'std::list<T,std::allocator<_Ty>>::size_type': dependent name is not a type
+H:\cse532\monitor_object\monitor_object.h(19,1): message :  prefix with 'typename' to indicate a type
+H:\cse532\monitor_object\monitor_object.h(19,1): error C2061:  syntax error: identifier 'size_type'
+H:\cse532\monitor_object\monitor_object.h(19,1): error C2535:  'synchronized_list<T>::synchronized_list(void)': member function already defined or declared
+H:\cse532\monitor_object\monitor_object.h(18): message :  see declaration of 'synchronized_list<T>::synchronized_list'
+H:\cse532\monitor_object\monitor_object.cpp(20,1): error C2988:  unrecognizable template declaration/definition
+H:\cse532\monitor_object\monitor_object.cpp(20,1): error C2059:  syntax error: '('
+H:\cse532\monitor_object\monitor_object.cpp(21,1): error C2143:  syntax error: missing ';' before '{'
+H:\cse532\monitor_object\monitor_object.cpp(21,1): error C2447:  '{': missing function header (old-style formal list?)
