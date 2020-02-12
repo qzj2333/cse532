@@ -268,4 +268,129 @@ int main(int argc, char** argv)
 To make sure cout outputs are in the same order it processed, I put cout inside the lk lock.
 In this time, all ints pushed by one thread will output as a whole and in the right order.
 
-6.
+6. 
+SOME NOTES:
+- We add a boolean variable "unlimit" to indicate whether there is any water mark or not (when low=high=0)
+- Since we only test this part on push_back and pop_front, we only modify these 2 functions. The other 2 functions (push_front & pop_front) can be modified in similarv way.
+- Before doing p6, we put all methods in cpp file. Starting from p6 of this studio, we put declaration code into header file and execution code in source file for better coding style.
+
+template <typename T> 
+class synchronized_list
+{
+private:
+	list<T> l;
+	// 4
+	mutex m;
+	condition_variable cv;
+	typename list<T>::size_type low; 
+	typename list<T>::size_type high;
+	bool unlimit = false; // true if low = high = 0
+
+public:
+	bool finishedPush = false;
+	synchronized_list();
+	synchronized_list(size_t ilow, size_t ihigh);
+	void push_back(T item);
+	T pop_back();
+	void push_front(T item);
+	T pop_front();
+	void popAll();
+};
+
+template <class T>
+synchronized_list<T>::synchronized_list() 
+{
+	low = NULL;
+	high = NULL;
+};
+
+synchronized_list<int>::synchronized_list()
+{
+	low = 0;
+	high = 0;
+	unlimit = true;
+};
+
+template <class T>
+synchronized_list<T>::synchronized_list(size_t ilow, size_t ihigh) : low(ilow), high(ihigh) {}
+
+template <class T>
+void synchronized_list<T>::push_back(T item)
+{
+	// 6
+	unique_lock<mutex> lk(m);
+	cv.wait(lk, [this] { return (l.size() < high) || unlimit; });		// wait until list size <= high
+	// wake up
+	l.push_back(item);
+	lk.unlock();
+	// use nofity_all as default
+	cv.notify_all(); // notify all threads, all threads check above while loop condition, and then one of them get lock
+};
+
+template <class T>
+T synchronized_list<T>::pop_front()
+{
+	unique_lock<mutex> lk(m);
+	cv.wait(lk, [this] { return l.size() > low || (unlimit && !l.empty()); });		// wait until list size >= low
+	// wake up
+	T item = l.front();
+	l.pop_front();
+	cout << "pop:" << item << endl;
+	lk.unlock();
+	cv.notify_all();
+	return item;
+};
+
+
+int main(int argc, char** argv)
+{
+	synchronized_list<int> l(0,1);
+	thread t1([&l]
+		{
+			l.push_back(5);
+		});
+	thread t2([&l]
+		{
+			*/
+			l.push_back(8);
+		});
+	thread t3([&l]
+		{
+			l.push_back(10);
+		});
+	thread t4([&l]
+		{
+			l.push_back(3);
+		});
+
+	thread t5([&l]
+		{
+			l.pop_front();
+		});
+
+	thread t6([&l]
+		{
+			l.pop_front();
+		});
+
+	thread t7([&l]
+		{
+			l.pop_front();
+		});
+
+	thread t8([&l]
+		{
+			l.pop_front();
+		});
+
+	t1.join();
+	t2.join();
+	t3.join();
+	t4.join();
+	t5.join();
+	t6.join();
+	t7.join();
+	t8.join();
+
+	return 0;
+};
