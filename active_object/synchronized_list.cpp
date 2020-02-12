@@ -1,22 +1,71 @@
 #include "synchronized_list.h"
 
-template<typename T, typename U>
-foo* foo<T, U>::operator<<(const int& i)
+template <class T>
+synchronized_list<T>::synchronized_list()
 {
-	//lock_guard<mutex> guard(m); // 4
-	lock_guard<U> guard(m); // 6
-	vi.push_back(i);
-	return this;
-}
+	low = NULL;
+	high = NULL;
+};
 
-int foo::operator()()
+synchronized_list<int>::synchronized_list()
 {
-	//lock_guard<mutex> guard(m); // 4
-	lock_guard<U> guard(m); // 6
-	int sum = 0;
-	for (int i : vi)
-	{
-		sum += i;
-	}
-	return sum;
-}
+	low = 0;
+	high = 0;
+	unlimit = true;
+};
+
+template <class T>
+synchronized_list<T>::synchronized_list(size_t ilow, size_t ihigh) : low(ilow), high(ihigh) {}
+
+template <class T>
+void synchronized_list<T>::push_back(T item)
+{
+
+	unique_lock<mutex> lk(m);
+	cv.wait(lk, [this] { return (l.size() < high) || unlimit; });		// wait until list size <= high
+	// wake up
+	l.push_back(item);
+	lk.unlock();
+	// use nofity_all as default
+	cv.notify_all(); // notify all threads, all threads check above while loop condition, and then one of them get lock
+//}
+};
+
+template <class T>
+T synchronized_list<T>::pop_back()
+{
+	unique_lock<mutex> lk(m);
+	cv.wait(lk, [this] { return l.size() > low || (unlimit && !l.empty()); });		// wait until list size >= low
+	// wake up
+	T item = l.front();
+	l.pop_back();
+	lk.unlock();
+	cv.notify_all();
+	return item;
+};
+
+template <class T>
+void synchronized_list<T>::push_front(T item)
+{
+	unique_lock<mutex> lk(m);
+	cv.wait(lk, [this] { return (l.size() < high) || unlimit; });		// wait until list size <= high
+	// wake up
+	l.push_front(item);
+	lk.unlock();
+	// use nofity_all as default
+	cv.notify_all();
+};
+
+template <class T>
+T synchronized_list<T>::pop_front()
+{
+	unique_lock<mutex> lk(m);
+	cv.wait(lk, [this] { return l.size() > low || (unlimit && !l.empty()); });		// wait until list size >= low
+	// wake up
+	T item = l.front();
+	l.pop_front();
+	lk.unlock();
+	cv.notify_all();
+	return item;
+	
+};

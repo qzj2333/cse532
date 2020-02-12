@@ -119,6 +119,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="active_object.cpp" />
+    <ClCompile Include="synchronized_list.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="active_object.h" />
+    <ClInclude Include="synchronized_list.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,0 +1,6 @@
+﻿  active_object.cpp
+  synchronized_list.cpp
+  Generating Code...
+active_object.obj : error LNK2019: unresolved external symbol "public: int __cdecl synchronized_list<int>::pop_back(void)" (?pop_back@?$synchronized_list@H@@QEAAHXZ) referenced in function "public: void __cdecl active_object<int>::run_service(void)" (?run_service@?$active_object@H@@QEAAXXZ)
+active_object.obj : error LNK2019: unresolved external symbol "public: void __cdecl synchronized_list<int>::push_front(int)" (?push_front@?$synchronized_list@H@@QEAAXH@Z) referenced in function "public: void __cdecl active_object<int>::enqueue(int)" (?enqueue@?$active_object@H@@QEAAXH@Z)
+H:\cse532\active_object\x64\Debug\active_object.exe : fatal error LNK1120: 2 unresolved externals

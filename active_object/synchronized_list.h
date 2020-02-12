@@ -1,39 +1,28 @@
 #pragma once
-#include <vector>
 #include <iostream>
-#include <thread>
+#include<list>
 #include <mutex>
+#include <condition_variable>
 using namespace std;
 
-template<typename T, typename U> class foo
+template <class T>
+class synchronized_list
 {
 private:
-	vector<T> vi;
-	//mutex m; // 4
-	U m; // 6
+	list<T> l;
+	// 4
+	mutex m;
+	condition_variable cv;
+	typename list<T>::size_type low;
+	typename list<T>::size_type high;
+	bool unlimit = false; // true if low = high = 0
+
 public:
-	foo* operator<<(const int& i);
-	int operator()();
-
-	// 4 synchronized print method (synchronize = add mutex?)
-	void printMethod(int sum)
-	{
-		//lock_guard<mutex> guard(m);
-		lock_guard<U> guard(m); // 6
-		cout << sum << endl;
-	}
-
-	// 5
-	long factorial_of_sum()
-	{
-		//lock_guard<mutex> guard(m);
-		lock_guard<U> guard(m); // 6
-		int factorial = (*this)();
-
-		for (int i = factorial - 1; i > 0; i--)
-		{
-			factorial *= i;
-		}
-		return factorial;
-	}
+	bool finishedPush = false;
+	synchronized_list();
+	synchronized_list(size_t ilow, size_t ihigh);
+	void push_back(T item);
+	T pop_back();
+	void push_front(T item);
+	T pop_front();
 };
