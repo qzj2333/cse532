@@ -120,6 +120,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="active_object.cpp" />
+    <ClCompile Include="mainFunc.cpp" />
     <ClCompile Include="synchronized_list.cpp" />
   </ItemGroup>
   <ItemGroup>

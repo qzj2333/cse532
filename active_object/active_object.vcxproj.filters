@@ -21,6 +21,9 @@
     <ClCompile Include="synchronized_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mainFunc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="active_object.h">

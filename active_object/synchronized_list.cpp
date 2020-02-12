@@ -1,6 +1,6 @@
 #include "synchronized_list.h"
 
-template <class T>
+template <typename T>
 synchronized_list<T>::synchronized_list()
 {
 	low = NULL;
@@ -14,10 +14,10 @@ synchronized_list<int>::synchronized_list()
 	unlimit = true;
 };
 
-template <class T>
+template <typename T>
 synchronized_list<T>::synchronized_list(size_t ilow, size_t ihigh) : low(ilow), high(ihigh) {}
 
-template <class T>
+template <typename T>
 void synchronized_list<T>::push_back(T item)
 {
 
@@ -31,7 +31,7 @@ void synchronized_list<T>::push_back(T item)
 //}
 };
 
-template <class T>
+template <typename T>
 T synchronized_list<T>::pop_back()
 {
 	unique_lock<mutex> lk(m);
@@ -44,7 +44,7 @@ T synchronized_list<T>::pop_back()
 	return item;
 };
 
-template <class T>
+template <typename T>
 void synchronized_list<T>::push_front(T item)
 {
 	unique_lock<mutex> lk(m);
@@ -56,7 +56,7 @@ void synchronized_list<T>::push_front(T item)
 	cv.notify_all();
 };
 
-template <class T>
+template <typename T>
 T synchronized_list<T>::pop_front()
 {
 	unique_lock<mutex> lk(m);
@@ -67,5 +67,5 @@ T synchronized_list<T>::pop_front()
 	lk.unlock();
 	cv.notify_all();
 	return item;
-	
+
 };

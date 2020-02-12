@@ -1,3 +1,6 @@
+#ifndef SYNCHRONIZED_LIST_H
+#define SYNCHRONIZED_LIST_H
+
 #pragma once
 #include <iostream>
 #include<list>
@@ -5,7 +8,7 @@
 #include <condition_variable>
 using namespace std;
 
-template <class T>
+template <typename T>
 class synchronized_list
 {
 private:
@@ -26,3 +29,7 @@ public:
 	void push_front(T item);
 	T pop_front();
 };
+#ifdef TEMPLATE_HEADERS_INCLUDE_SOURCE
+#include "synchronized_list.cpp"
+#endif
+#endif
