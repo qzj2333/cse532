@@ -4,6 +4,12 @@
 using namespace std;
 
 
+enum arg
+{
+	singleArgument = 1,
+	success = 0
+};
+
 std::atomic<bool> x, y;
 std::atomic<int> z;
 
@@ -125,7 +131,7 @@ int main(int argc, char** argv)
 	cout << "atomic_uintmax_t is lock free: " << sauimt.is_lock_free() << endl;
 
 	z = 0;
-	if (argc == 1)
+	if (argc == singleArgument)
 	{
 		x = false;
 		y = false;
@@ -137,7 +143,7 @@ int main(int argc, char** argv)
 		
 		return 0;
 	}
-	else if (argc > 1)
+	else if (argc > singleArgument)
 	{
 		for (int i = 0; i < atoi(argv[1]); ++i) {
 			x = false;
@@ -149,7 +155,7 @@ int main(int argc, char** argv)
 			cout << z << endl;
 			
 		}
-		return 0;
+		return success;
 	}
 	
 }
