@@ -23,5 +23,14 @@
     <ClInclude Include="listing_7_2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="listing_7_3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="listing_7_13.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Readme.txt" />
   </ItemGroup>
 </Project>

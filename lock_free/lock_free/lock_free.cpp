@@ -3,7 +3,7 @@
 // 2.
 //#include "listing_7_2.h"
 
-// 3.
+// 3.4.
 //#include "listing_7_3.h"
 
 // 5.
@@ -11,14 +11,6 @@
 #include <vector>
 #include <thread>
 using namespace std;
-
-
-/*
-enum arg
-{
-	success = 0
-};
-*/
 
 int main(int argc, char** argv)
 {
@@ -61,7 +53,9 @@ int main(int argc, char** argv)
 
 		for (int i = 0; i < 10; i++) {
 			if (i % 2 == 1) {
-				ov.push_back(*stack.pop());
+				int j = *stack.pop();
+				cout << "pop odd: " << j << endl;
+				ov.push_back(j);
 			}
 		}
 		});
@@ -78,7 +72,9 @@ int main(int argc, char** argv)
 
 		for (int i = 0; i < 10; i++) {
 			if (i % 2 == 0) {
-				ev.push_back(*stack.pop());
+				int j = *stack.pop();
+				cout << "pop even: " << j << endl;
+				ev.push_back(j);
 			}
 		}
 		});

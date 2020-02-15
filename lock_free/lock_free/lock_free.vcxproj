@@ -122,7 +122,12 @@
     <ClCompile Include="lock_free.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="listing_7_13.h" />
     <ClInclude Include="listing_7_2.h" />
+    <ClInclude Include="listing_7_3.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Readme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

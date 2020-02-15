@@ -79,4 +79,12 @@ pop: 4
 pop: 3
 push: 5
 
-4. 
+4. There is interleaving in both threads. 
+   That's because both threads are push onto the same stack, so the stack contains both even and odd integers.
+   And we don't know how handler handles when to switch threads, so there's no order between even and odd in the stack.
+   Therefore, we can not guarentee the thread that push odd/even will pop odd/even as well.
+
+5. In previous exercise, although there's no order between even and odd numbers in stack, the odd numbers in stack is globally popped in deceding order. Same as even numbers.
+   In another words, although there's no order between thread exectuion, there is order within same thread (i.e. in same thread, all pushs must be executed before any pop)
+   However, in this exercise, since we use memory_order_relaxed, there's no order in the execution within the same thread. 
+   Therefore, there will happen some odd number be poped while some odd number is not pushed yet. Same for the even number case.
