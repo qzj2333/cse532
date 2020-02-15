@@ -1,6 +1,2 @@
-﻿  active_object.cpp
-  mainFunc.cpp
-  synchronized_list.cpp
-  Generating Code...
-synchronized_list.obj : error LNK2005: "public: __cdecl synchronized_list<int>::synchronized_list<int>(void)" (??0?$synchronized_list@H@@QEAA@XZ) already defined in mainFunc.obj
-H:\cse532\active_object\x64\Debug\active_object.exe : fatal error LNK1169: one or more multiply defined symbols found
+﻿  mainFunc.cpp
+  active_object.vcxproj -> H:\cse532\active_object\x64\Debug\active_object.exe

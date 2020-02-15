@@ -6,6 +6,7 @@
 #include<list>
 #include <mutex>
 #include <condition_variable>
+#include <thread>
 using namespace std;
 
 template <typename T>
@@ -19,7 +20,7 @@ private:
 	typename list<T>::size_type low;
 	typename list<T>::size_type high;
 	bool unlimit = false; // true if low = high = 0
-
+	bool isShutDown = false; // 5 return from wait if isShutDown == true
 public:
 	bool finishedPush = false;
 	synchronized_list();
@@ -28,6 +29,7 @@ public:
 	T pop_back();
 	void push_front(T item);
 	T pop_front();
+	void shut_down();
 };
 #ifdef TEMPLATE_HEADERS_INCLUDE_SOURCE
 #include "synchronized_list.cpp"
