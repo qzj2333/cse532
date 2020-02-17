@@ -1,18 +1,25 @@
 #pragma once
 #include <thread>
 #include <future>
+using namespace std;
 class interrupt_flag
 {
 private:
-	bool flag = false;
+	bool f = false;
 public:
 	void set()
 	{
-		flag = true;
+		f = true;
 	};
 	bool is_set() const
 	{
-		return flag;
+		return f;
+	}
+	string print()
+	{
+		if(f)
+			return "1";
+		return "0";
 	};
 };
 thread_local interrupt_flag this_thread_interrupt_flag;
@@ -27,7 +34,8 @@ public:
 		std::promise<interrupt_flag*> p;
 		internal_thread = std::thread([f, &p] {
 			p.set_value(&this_thread_interrupt_flag);
-			f(); });
+			//cout << "f result: "<< f << endl;
+			});
 		flag = p.get_future().get();
 	}
 	void interrupt()
@@ -35,5 +43,32 @@ public:
 		if (flag) {
 			flag->set();
 		}
+	}
+
+	void interruption_point()
+	{
+		cout << "enter interruption_point:" << this_thread_interrupt_flag.print() << endl;
+		if (this_thread_interrupt_flag.is_set())
+		{
+			cout << "!!!!" << endl;
+			//throw "thread_interrupted";
+		}
+	}
+
+	void join()
+	{
+		flag = NULL;
+		internal_thread.join();
+	}
+
+	void detach()
+	{
+		flag = NULL;
+		internal_thread.detach();
+	}
+
+	bool joinable() const
+	{
+		return internal_thread.joinable();
 	}
 };
