@@ -2,6 +2,13 @@
 #include <thread>
 #include <future>
 using namespace std;
+
+
+class thread_interrupted : public std::exception {
+public:
+	virtual char const* what() const noexcept { return "thread_interrupted."; }
+};
+
 class interrupt_flag
 {
 private:
@@ -22,19 +29,27 @@ public:
 		return "0";
 	};
 };
+
 thread_local interrupt_flag this_thread_interrupt_flag;
 class interruptible_thread
 {
 	std::thread internal_thread;
-	interrupt_flag* flag;
+	interrupt_flag * flag;
 public:
 	template<typename FunctionType>
-	interruptible_thread(FunctionType f)
+	interruptible_thread(FunctionType && f)
 	{
 		std::promise<interrupt_flag*> p;
-		internal_thread = std::thread([f, &p] {
+		internal_thread = std::thread([&f, &p] {
 			p.set_value(&this_thread_interrupt_flag);
 			//cout << "f result: "<< f << endl;
+			/*
+			try {
+				std::forward<FunctionType>(f);
+			}
+			catch (thread_interrupted const&) {
+			}
+			*/
 			});
 		flag = p.get_future().get();
 	}
@@ -47,12 +62,21 @@ public:
 
 	void interruption_point()
 	{
-		cout << "enter interruption_point:" << this_thread_interrupt_flag.print() << endl;
-		if (this_thread_interrupt_flag.is_set())
+		
+		if (flag->is_set())
 		{
 			cout << "!!!!" << endl;
-			//throw "thread_interrupted";
+			throw "thread_interrupted";
 		}
+		/*
+		if (flag != 0 && flag ->is_set()) {
+			//throw thread_interrupted();
+			cout << "aaaaa" << endl;
+		}
+		else if (flag == 0) {
+			cout << "eeeee" << endl;
+		}
+		*/
 	}
 
 	void join()

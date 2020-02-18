@@ -5,6 +5,7 @@
 
 using namespace std;
 
+
 int fib(unsigned int n)
 {
 	if (n <= 1)
@@ -14,7 +15,7 @@ int fib(unsigned int n)
 	else
 	{
 		int result = fib(n - 1) + fib(n - 2);
-		//cout << "result: " << result << endl;
+		cout << "result: " << result << endl;
 		return result;
 	}
 }
@@ -25,23 +26,27 @@ int main(int argc, char** argv)
 
 	//interruption_point();
 	interruptible_thread t2(fib(7));
+	
 	cout << "finish initialization" << endl;
 	try
 	{
-		t1.detach();
-		t2.detach();
+		cout << "start " << endl;
 		t2.interrupt();
 		t2.interruption_point();
-		//t2.detach();
 		t1.interruption_point();
+		//t2.detach();
 		//t1.detach();
-
-		cout << "interrupt t1" << endl;
+		std::terminate();
+		
+		cout << "stop interrupt" << endl;
 
 	}
 	catch (...)
 	{
-		cout << "t1: " << endl;
+		cout << "catch: " << endl;
+		std::terminate();
+		//t2.detach();
+		//t1.detach();
 	}
 	/*try
 	{
