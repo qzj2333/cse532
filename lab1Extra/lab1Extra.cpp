@@ -10,7 +10,8 @@ enum returnValue
 {
 	success = 0,
 	fileDoesNotExist = 1,
-	numberArgumentIncorrect = 2
+	numberArgumentIncorrect = 2,
+	inputOutputFileSameName = 3
 };
 
 enum arg
@@ -173,23 +174,37 @@ int main(int argc, char** argv)
 {
 	if (argc >= rightNumberArgument1 && string(argv[scrambleLoc]).compare("SCRAMBLE") == 0)
 	{
+		string input = argv[inputFile1];
+		string output = argv[outputFile1];
+		if(input.compare(output)== 0)
+		{
+			cout << "Input and output filename must be different." << endl;
+			return inputOutputFileSameName;
+		}
 		string pName, s;
 		for (int i = playNameStart1; i < argc; i++)
 		{
 			s = argv[i];
 			pName += s + " ";
 		}
-		return extraCredit1(argv[inputFile1], argv[outputFile1], pName);
+		return extraCredit1(input, output, pName);
 	}
 	else if (argc >= rightNumberArgument0)
 	{
+		string input = argv[inputFile0];
+		string output = argv[outputFile0];
+		if (input.compare(output) == 0)
+		{
+			cout << "Input and output filename must be different." << endl;
+			return inputOutputFileSameName;
+		}
 		string pName, s;
 		for (int i = playNameStart0; i < argc; i++)
 		{
 			s = argv[i];
 			pName += s + " ";
 		}
-		return extraCredit0(argv[inputFile0], argv[outputFile0], pName);
+		return extraCredit0(input, output, pName);
 	}
 	else
 	{
