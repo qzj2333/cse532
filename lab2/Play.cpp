@@ -16,14 +16,17 @@ Play::Play(vector<string>& n)
 		it++;
 	}
 	line_counter = 1;
-	scene_fragment_counter = 1;	// ?????????? 1 or 0 ?????????
+	scene_fragment_counter = 0;
 	on_stage = 0;
 	currCharacter = "";
 };
 
 void Play::recite(vector<container>::iterator it, unsigned int scene_fragment_number) // currently only print one container / line
 {
+	cout << "enter recite!" << scene_fragment_number  << endl;
+	cout << "enter recite!!" << scene_fragment_counter << endl;
 	unique_lock<mutex> lk(m);
+	cout << "enter recite" << scene_fragment_number << scene_fragment_counter << endl;
 	while (scene_fragment_counter < scene_fragment_number || (scene_fragment_counter == scene_fragment_number && line_counter < it->order))
 	{
 		cv.wait(lk, [this, it, scene_fragment_number] 
@@ -39,32 +42,10 @@ void Play::recite(vector<container>::iterator it, unsigned int scene_fragment_nu
 	{
 		cerr << "counter greater than order number" << endl;
 	}
-	it++;
 	lk.unlock();
+	it++;
 	cv.notify_all();
 	return;
-
-
-	/*if (line_counter > it->order)
-	{
-		cerr << "counter greater than iterator order number" << endl;
-		it++;
-	}
-	else
-	{
-		
-		if (currCharacter == "" || currCharacter.compare(it->characterName) != 0) // if change character or beginning of the play
-		{
-			currCharacter = it->characterName;
-			cout << "\n" << it->characterName << "." << endl;
-		}
-
-		cout << it->text << endl;
-		it++;
-		line_counter++;
-	}
-	lk.unlock();
-	cv.notify_all();*/
 }
 
 int Play::enter(unsigned int scene_fragment_number)
@@ -89,6 +70,7 @@ int Play::enter(unsigned int scene_fragment_number)
 
 int Play::exit()
 {
+	lock_guard<mutex> lk(m);
 	if (on_stage > one)
 	{
 		on_stage--;

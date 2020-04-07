@@ -12,14 +12,16 @@ Director::Director(string name, int min_num_players)
 		int curr_config_lines = 0;
 		int last_config_lines = 0;
 		bool last_is_scene = false;
+		unsigned int fragNum = 0;
 		while (getline(script_file, line))
 		{
 			if (!line.empty())	// need strip line?
 			{
+				
 				firstSpace = line.find_first_of(" ");
 				if (firstSpace > 0 && firstSpace < line.size())
 				{
-					string first = line.substr(0, firstSpace - 1);
+					string first = line.substr(0, firstSpace);
 					if (first.compare("[scene]") == 0)
 					{
 						string sceneName = line.substr(firstSpace + 1);
@@ -27,7 +29,7 @@ Director::Director(string name, int min_num_players)
 						last_is_scene = true;
 					}
 				}
-				else if (firstSpace == line.size())
+				else // assume config file is correct formatting: (either [scene] or txt)
 				{
 					ifstream config_file;
 					config_file.open(line);
@@ -38,6 +40,18 @@ Director::Director(string name, int min_num_players)
 						{
 							if (!line.empty())
 							{
+								string cName;
+								string fName;
+								istringstream iss(config_line);
+								if (iss >> cName && iss >> fName)
+								{
+									shared_ptr<Fragment> f(new Fragment);
+									f->character_name = cName;
+									f->filename = fName;
+									f->fragment_number = fragNum;
+									fragments.push_back(f);
+									fragNum++;
+								}
 								curr_config_lines++;
 							}
 						}
@@ -58,7 +72,7 @@ Director::Director(string name, int min_num_players)
 		int num_players = max(max_config_lines, min_num_players);
 		for (int i = 0; i < num_players; i++)
 		{
-			shared_ptr<Player> player(new Player(play));
+			shared_ptr<Player> player(new Player(*play));
 			players.push_back(player);
 		}
 	}
@@ -69,10 +83,29 @@ Director::Director(string name, int min_num_players)
 
 }
 
-void Director::cue(string character_name, string file_name, int frag_num)
+// return success if not interrupt
+//	      interrupt if interrupted
+void Director::cue()	// n: nth scene
+//string character_name, string file_name, int frag_num
 {
-	for (shared_ptr<Player> p : players)
+	int size = 0;
+	for (shared_ptr<Player> curr_player : players)
 	{
-		p->enter();
+		size++;
+	}
+	cout << "size" << size << endl;
+	// cout scene name
+	// for each fragment, enter player
+	int c = 0;
+	for (shared_ptr<Fragment> f : fragments)
+	{
+		players[c%size]->enter(f);	// (try to) equally assign each fragment to different players
+		c++;
+	}
+	cout << "enter finish!!!!!!" << endl;
+	// exit each player
+	for (shared_ptr<Player> curr_player : players)
+	{
+		curr_player->exit();
 	}
 }

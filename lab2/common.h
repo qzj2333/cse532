@@ -12,6 +12,7 @@
 #include <cctype>
 #include <locale>
 #include <queue>
+#include <future>
 using namespace std;
 
 enum returnValues
@@ -22,7 +23,8 @@ enum returnValues
 	FileNotExist = 3,
 	noValidInfo = 4,
 	enter_fail = 5,
-	exit_fail = 6
+	exit_fail = 6,
+	interruptted = 7
 };
 
 enum constants
@@ -33,6 +35,21 @@ enum constants
 enum arg
 {
 	programName = 0,
-	configureFile = 1,
-	rightNumberArgument = 2
+	rightNumberArgumentLow = 2,
+	rightNumberArgumentHigh = 3,
+	script_file = 1,
+	min_players_pos = 2
+};
+
+struct Fragment
+{
+	unsigned int fragment_number;
+	string character_name;
+	string filename;
+};
+
+struct Scene
+{
+	vector<shared_ptr<Fragment>> fragments;
+	string name;
 };

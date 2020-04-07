@@ -22,9 +22,9 @@ private:
 	unsigned int line_counter;
 	unsigned int scene_fragment_counter;
 	unsigned int on_stage;	// # of characters currently on stage
-	string currCharacter;
 
 public:
+	string currCharacter;
 	Play(vector<string>& n);
 	void recite(vector<container>::iterator it, unsigned int scene_fragment_number);
 	int enter(unsigned int scene_fragment_number);

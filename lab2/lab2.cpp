@@ -1,76 +1,32 @@
-#include "Player.h"
+#include "Director.h"
 
 int main(int argc, char** argv)
 {
-	if (argc != rightNumberArgument)
+	if (argc < rightNumberArgumentLow || argc > rightNumberArgumentHigh)
 	{
-		cout << "usage: " << argv[programName] << " <configuration_file_name>" << endl;
+		cout << "usage: " << argv[programName] << " <configuration_file_name> || " <<  argv[programName] << " <configuration_file_name> <min_num_players>" << endl;
 		return inputNumberNotCorrect;
 	}
-	fstream configFile;
-	configFile.open(argv[configureFile]);
-	if (configFile.is_open())
+	if (argc == rightNumberArgumentLow)
 	{
-		string line;
-		bool valid = false;
-		// get first non-blank line as play name
-		while (getline(configFile, line) && line.empty())
+		Director d(argv[script_file]);
+		d.cue();
+		cout << "argument 2 after cue!!!!!!!!!!!!" << endl;
+	}
+	else if (argc == rightNumberArgumentHigh)
+	{
+		unsigned int min_players;
+		istringstream iss(argv[min_players_pos]);
+		if (iss >> min_players)
 		{
-			continue;
+			Director d(argv[script_file], min_players);
+			d.cue();
 		}
-		string playName = line;
-		Play p(playName);
-		vector<Player> plays;
-		while (getline(configFile, line))
+		else
 		{
-			if (!line.empty())
-			{
-				string cName;
-				string fName;
-				istringstream iss(line);
-				if (iss >> cName && iss >> fName)
-				{
-					cout << fName << endl;
-					ifstream* characterFile = new ifstream(fName);
-					// dynamic allocation for different character file ifstream
-					shared_ptr<ifstream> pFile(characterFile);
-					if (pFile->is_open())
-					{
-						valid = true;
-						plays.emplace_back(Player(p, cName, pFile));
-
-					}
-					else
-					{
-						cerr << "Character file can not be opened." << endl;
-					}
-				}
-				else
-				{
-					cerr << "badly formatted line." << endl;
-				}
-			}
-		}
-
-		if (!valid)
-		{
-			cout << "No valid character information extracted" << endl;
-			return noValidInfo;
-		}
-		for (Player& p : plays)
-		{
-			p.enter();
-		}
-		for (Player& p : plays)
-		{
-			p.exit();
+			cout << "usage: " << argv[programName] << " <configuration_file_name> || " << argv[programName] << " <configuration_file_name> <min_num_players>" << endl;
+			return inputNumberNotCorrect;
 		}
 	}
-	else
-	{
-		cout << "Configure File can not be opened." << endl;
-		return FileNotExist;
-	}
-	configFile.close();
 	return success;
 }
