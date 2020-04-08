@@ -5,4 +5,6 @@ Nicole Wang (l.wang12@wustl.edu), Lin Li(lilin1@wustl.edu)
 
 1. change arg in Play::enter & exit: from unsigned int (frag num) to Fragment& --> to get character name
 
-TODO: override
+Extra credit:
+- will deadlock if # players < 4
+

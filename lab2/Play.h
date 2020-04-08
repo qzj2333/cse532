@@ -1,8 +1,10 @@
+// header file of play class
+
 #if ! defined (PLAY_H)
 #define PLAY_H
 #include "common.h"
 
-// should move to Player class later
+// contains info for a line in any character file
 struct container
 {
 	unsigned int order;
@@ -16,17 +18,15 @@ class Play
 {
 private:
 	mutex m;
-	mutex mprint;
 	condition_variable cv;
-	unsigned int line_counter = 1;
-	unsigned int scene_fragment_counter = 0;
-	unsigned int on_stage = 0;	// # of characters currently on stage
-	vector<string> names;
-	vector<string>::iterator it;
+	unsigned int line_counter;	// line counter of current fragment
+	unsigned int scene_fragment_counter;	// fragment counter
+	unsigned int on_stage;	// # of characters currently on stage
+	vector<string> names;	// all scene names of current script
+	vector<string>::iterator it;	// iterator for the scene names vector
 
 public:
-	static bool end;
-	string currCharacter;
+	string currCharacter;	// current active character of the play, "" if none
 	Play(vector<string>& n);
 	void recite(vector<container>::iterator& iter, unsigned int& scene_fragment_number);
 	int enter(shared_ptr<Fragment> f);

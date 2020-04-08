@@ -1,5 +1,6 @@
 #include "Player.h"
 
+// construct a new thread
 Player::Player(Play& p) :currPlay(p), end(false)
 {
 	thread newT([this]()
@@ -9,6 +10,7 @@ Player::Player(Play& p) :currPlay(p), end(false)
 	t = move(newT);
 };
 
+// join the thread
 Player::~Player()
 {
 	cv.notify_all();
@@ -18,6 +20,7 @@ Player::~Player()
 	}
 }
 
+// Get one fragment from working queue, call read to process all works for that fragment
 void Player::prepare()
 {
 	while (!fragment_queue.empty()) {
@@ -39,11 +42,15 @@ void Player::prepare()
 	}
 }
 
+// load all contents from given fragment f to data member content
+// enter current fragment's character
+// act all contents in current fragment
+// exit current fragment's character
 void Player::read(shared_ptr<Fragment>& f)
 {
-	string line;
+	string line, first;
 	size_t pos;
-	unsigned int lineNum;
+	int lineNum;
 	content.clear();
 	ifstream ifs (f->filename);
 	if (ifs.is_open())
@@ -52,36 +59,48 @@ void Player::read(shared_ptr<Fragment>& f)
 		{
 			if (!line.empty())	// skip empty line
 			{
-				pos = line.find(' ', 0);
-				lineNum = stoi(line.substr(0, pos)); // convert string to int
-				line = line.substr(pos + 1);
-				// trim the line (Source: https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring)
-				line.erase(line.begin(), find_if(line.begin(), line.end(), [](int ch) {
-					return !isspace(ch);
-					}));
-				line.erase(find_if(line.rbegin(), line.rend(), [](int ch) {
-					return !isspace(ch);
-					}).base(), line.end());
-				if (lineNum > 0) // lineNum valid > 0 print out empty lines if has valid line number
-				{
-					container c;
-					c.order = lineNum;
-					c.characterName = f->character_name;
-					c.text = line;
-					content.push_back(c);
-				}
-				else
+				pos = line.find(' ');
+				if (pos == line.npos)	// did not find white space
 				{
 					cerr << "badly formatted line read" << endl;
 				}
+				else
+				{
+					istringstream iss(line);
+					if (iss >> lineNum && lineNum > 0)
+					{
+						line = line.substr(pos + 1);
+						// trim the line (Source: https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring)
+						line.erase(line.begin(), find_if(line.begin(), line.end(), [](int ch) {
+							return !isspace(ch);
+							}));
+						line.erase(find_if(line.rbegin(), line.rend(), [](int ch) {
+							return !isspace(ch);
+							}).base(), line.end());
+						container c;
+						c.order = lineNum;
+						c.characterName = f->character_name;
+						c.text = line;
+						content.push_back(c);
+					}
+					else
+					{
+						cerr << "bad line number read" << endl;
+					}
+				}
 			}
 		}
+		currPlay.enter(f);
+		act(f);
+		currPlay.exit(f);
 	}
-	currPlay.enter(f);
-	act(f);
-	currPlay.exit(f);
+	else
+	{
+		cerr << f->filename << " player file can not open" << endl;
+	}
 }
 
+// call play's recite to display all contents in current fragment with other fragments in correct order
 void Player::act(shared_ptr<Fragment>& f)
 {
 	vector<container>::iterator iter = content.begin();
@@ -92,6 +111,7 @@ void Player::act(shared_ptr<Fragment>& f)
 	}
 }
 
+// add given fragment to the working queue
 void Player::enter(shared_ptr<Fragment>& fragment)
 {
 	unique_lock<mutex> lk(m);

@@ -1,11 +1,13 @@
 #include "Play.h"
 
+// container sorted by order
 bool container::operator<(const container& c)
 {
 	return order < c.order;
 }
 
-Play::Play(vector<string>& n):names(n),line_counter(1), scene_fragment_counter(0), on_stage(0), currCharacter("")
+// initialize all data members and let iterator points to the beginning of names vector
+Play::Play(vector<string>& n):line_counter(1), scene_fragment_counter(0), on_stage(0), names(n), currCharacter("")
 {
 	it = names.begin();
 	if (!names.empty())
@@ -13,10 +15,10 @@ Play::Play(vector<string>& n):names(n),line_counter(1), scene_fragment_counter(0
 		cout << *it << endl;
 		it++;
 	}
-	end = false;
 };
 
-void Play::recite(vector<container>::iterator& iter, unsigned int& scene_fragment_number) // currently only print one container / line
+// cout the character and their text in correct order
+void Play::recite(vector<container>::iterator& iter, unsigned int& scene_fragment_number)
 {
 	unique_lock<mutex> lk(m);
 	while (scene_fragment_counter < scene_fragment_number || (scene_fragment_counter == scene_fragment_number && line_counter < iter->order))
@@ -48,6 +50,7 @@ void Play::recite(vector<container>::iterator& iter, unsigned int& scene_fragmen
 	return;
 }
 
+// Enter a character in a fragment
 int Play::enter(shared_ptr<Fragment> f)
 {
 	unique_lock<mutex> lk(m);
@@ -69,6 +72,7 @@ int Play::enter(shared_ptr<Fragment> f)
 	return success;
 }
 
+// Exit a character in a fragment
 int Play::exit(shared_ptr<Fragment> f)
 {
 	lock_guard<mutex> lk(m);

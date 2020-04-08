@@ -1,3 +1,4 @@
+// common enums and struct
 #if ! defined (COMMON_H)
 #define COMMON_H
 #pragma once
@@ -17,10 +18,10 @@
 #include <future>
 using namespace std;
 
-enum returnValues
+enum returnValues // return label values
 {
 	success = 0,
-	inputNumberNotCorrect = 1,
+	inputNotCorrect = 1,
 	threadingError = 2,
 	FileNotExist = 3,
 	noValidInfo = 4,
@@ -34,26 +35,22 @@ enum constants
 	one = 1
 };
 
-enum arg
+enum arg // argument position	
 {
 	programName = 0,
 	rightNumberArgumentLow = 2,
 	rightNumberArgumentHigh = 3,
+	rightNumberArgumentExtra = 4,
 	script_file = 1,
-	min_players_pos = 2
+	min_players_pos = 2,
+	override_pos = 3
 };
 
-struct Fragment
+struct Fragment // a fragment of the scene
 {
 	unsigned int fragment_number = 0;
 	string character_name = "";
-	string filename = "";
-};
-
-struct Scene
-{
-	vector<shared_ptr<Fragment>> fragments;
-	string name = "";
+	string filename = "";	// file contains line number of the text of the character in current fragment
 };
 
 #endif

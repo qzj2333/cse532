@@ -1,6 +1,10 @@
 #include "Director.h"
 
-Director::Director(string name, int min_num_players)
+// name: name of the script file
+// min_num_players: min. number of players/threads created in this program if flag=false, number of players/threads created in this program if flag=true
+// read each line in the script file, save all scene names and each character's name and corresponding file into each fragments
+// create the play and number of players
+Director::Director(string name, int min_num_players, bool flag)
 {
 	ifstream script_file;
 	script_file.open(name);
@@ -15,7 +19,7 @@ Director::Director(string name, int min_num_players)
 		unsigned int fragNum = 0;
 		while (getline(script_file, line))
 		{
-			if (!line.empty())	// need strip line?
+			if (!line.empty())
 			{
 				
 				firstSpace = line.find_first_of(" ");
@@ -50,8 +54,9 @@ Director::Director(string name, int min_num_players)
 									f->filename = fName;
 									f->fragment_number = fragNum;
 									fragments.push_back(f);
+									curr_config_lines++;
 								}
-								curr_config_lines++;
+
 							}
 						}
 						max_config_lines = max(max_config_lines, curr_config_lines + last_config_lines);
@@ -63,13 +68,25 @@ Director::Director(string name, int min_num_players)
 							scene_names.push_back("");
 						}
 						last_is_scene = false;
+						fragNum++;
 					}
-					fragNum++;
+					else
+					{
+						cerr << "Can not open config file " << line << endl;
+					}
 				}
 			}
 		}
 		play = new Play(scene_names);
-		int num_players = max(max_config_lines, min_num_players);
+		int num_players;
+		if (flag)
+		{
+			num_players = min_num_players;
+		}
+		else
+		{
+			num_players = max(max_config_lines, min_num_players);
+		}
 		for (int i = 0; i < num_players; i++)
 		{
 			shared_ptr<Player> player(new Player(*play));
@@ -83,14 +100,11 @@ Director::Director(string name, int min_num_players)
 
 }
 
-// return success if not interrupt
-//	      interrupt if interrupted
-void Director::cue()	// n: nth scene
-//string character_name, string file_name, int frag_num
+// Equally distributed all fragments tasks among all players/threads
+// set thread/player as end if there's no work for it to complete
+void Director::cue()
 {
-	// cout scene name
-	// for each fragment, enter player
-	int c = 0;
+	size_t c = 0;
 	for (shared_ptr<Fragment> f : fragments)
 	{
 		players[c%players.size()]->enter(f);	// (try to) equally assign each fragment to different players
@@ -98,7 +112,7 @@ void Director::cue()	// n: nth scene
 	}
 	if (c < players.size())
 	{
-		for (int i = c; i < players.size(); i++)
+		for (size_t i = c; i < players.size(); i++)
 		{
 			players[i]->end = true;
 		}
