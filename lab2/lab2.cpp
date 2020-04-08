@@ -11,7 +11,6 @@ int main(int argc, char** argv)
 	{
 		Director d(argv[script_file]);
 		d.cue();
-		cout << "argument 2 after cue!!!!!!!!!!!!" << endl;
 	}
 	else if (argc == rightNumberArgumentHigh)
 	{
@@ -28,5 +27,6 @@ int main(int argc, char** argv)
 			return inputNumberNotCorrect;
 		}
 	}
+	
 	return success;
 }

@@ -3,6 +3,6 @@ Nicole Wang (l.wang12@wustl.edu), Lin Li(lilin1@wustl.edu)
 
 ==================================== Lab 2 =================================================
 
-1. can not enter play->recite's unique lock
-2. error msg on gcc
-3. frag_num_counter in play sometimes not correct (not always happen)
+1. change arg in Play::enter & exit: from unsigned int (frag num) to Fragment& --> to get character name
+
+TODO: override

@@ -1,41 +1,40 @@
 #include "Player.h"
 
-bool Player::end = false;
-
-Player::Player(Play& p) :currPlay(p) 
+Player::Player(Play& p) :currPlay(p), end(false)
 {
 	thread newT([this]()
 		{
-			prepare();
+			this->prepare();
 		});
 	t = move(newT);
-	
 };
 
 Player::~Player()
 {
+	cv.notify_all();
 	if (t.joinable())
 	{
-		cout << "join!!!!!!!! " << endl;
 		t.join();
 	}
 }
 
 void Player::prepare()
 {
-	while (!fragment_queue.empty() || !end) {
+	while (!fragment_queue.empty()) {
 		unique_lock<mutex> lk(m);
+		
 		cv.wait(lk, [this] 
 		{
-			return !this->fragment_queue.empty();
+				return !this->fragment_queue.empty() || end;
 		});
+		if (end)
+		{
+			return;
+		}
 		shared_ptr<Fragment> fragment = fragment_queue.front();
 		fragment_queue.pop();
-		if (fragment_queue.empty())
-		{
-			Player::end = true;
-		}
 		lk.unlock();
+		cv.notify_all();
 		read(fragment);
 	}
 }
@@ -45,7 +44,7 @@ void Player::read(shared_ptr<Fragment>& f)
 	string line;
 	size_t pos;
 	unsigned int lineNum;
-	content.empty();
+	content.clear();
 	ifstream ifs (f->filename);
 	if (ifs.is_open())
 	{
@@ -78,17 +77,18 @@ void Player::read(shared_ptr<Fragment>& f)
 			}
 		}
 	}
-	sort(content.begin(), content.end());
-	cout << "ready to act!" << f->fragment_number << " " << content.size() << endl;
-	act(f->fragment_number);
-	currPlay.exit();
+	currPlay.enter(f);
+	act(f);
+	currPlay.exit(f);
 }
 
-void Player::act(unsigned int frag_num)
+void Player::act(shared_ptr<Fragment>& f)
 {
-	for (vector<container>::iterator iter = content.begin(); iter != content.end(); ++iter)
-	{
-		currPlay.recite(iter, frag_num);
+	vector<container>::iterator iter = content.begin();
+	while(iter != content.end())
+	{		
+		currPlay.recite(iter, f->fragment_number);
+		// iter is increment in recite method, no need to increment iter here
 	}
 }
 
@@ -96,17 +96,6 @@ void Player::enter(shared_ptr<Fragment>& fragment)
 {
 	unique_lock<mutex> lk(m);
 	fragment_queue.push(fragment);
-	lk.unlock();
-	cv.notify_all();
-}
-
-void Player::exit()
-{
-	unique_lock<mutex> lk(m);
-	while (!fragment_queue.empty())
-	{
-		fragment_queue.pop();
-	}
 	lk.unlock();
 	cv.notify_all();
 }
