@@ -15,11 +15,11 @@ private:
 	condition_variable cv;
 	
 public:
-	bool end;
+	bool end;	// true if current player/thread takes no fragments
 	Player(Play& p);
 	~Player();
 	void prepare();	
-	void read(shared_ptr<Fragment>& f);
+	int read(shared_ptr<Fragment>& f);
 	void act(shared_ptr<Fragment>& f);
 	void enter(shared_ptr<Fragment>& fragment);
 };

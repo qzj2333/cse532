@@ -28,6 +28,8 @@ int main(int argc, char** argv)
 			{
 				Director d(argv[script_file], min_players);
 				d.cue();
+
+				return success;
 			}
 			catch (...)
 			{
@@ -52,6 +54,7 @@ int main(int argc, char** argv)
 			{
 				Director d(argv[script_file], num_players, true);
 				d.cue();
+				return success;
 			}
 			catch (...)
 			{

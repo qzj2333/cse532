@@ -14,6 +14,7 @@ Player::Player(Play& p) :currPlay(p), end(false)
 Player::~Player()
 {
 	cv.notify_all();
+
 	if (t.joinable())
 	{
 		t.join();
@@ -23,22 +24,33 @@ Player::~Player()
 // Get one fragment from working queue, call read to process all works for that fragment
 void Player::prepare()
 {
-	while (!fragment_queue.empty()) {
+	while (!fragment_queue.empty() || (!end && !Play::end)) 
+	{
 		unique_lock<mutex> lk(m);
-		
-		cv.wait(lk, [this] 
+
+		cv.wait_for(lk, 400ms, [this] 
 		{
-				return !this->fragment_queue.empty() || end;
+			return !this->fragment_queue.empty() || end || Play::end;
 		});
-		if (end)
+		if(!this->fragment_queue.empty())
 		{
+			shared_ptr<Fragment> fragment = fragment_queue.front();
+			fragment_queue.pop();
+
+			lk.unlock();
+			cv.notify_all();
+			if (read(fragment) == play_end)
+			{
+				cv.notify_all();
+				break;
+			}
+		}
+		else
+		{
+			lk.unlock();
+			cv.notify_all();
 			return;
 		}
-		shared_ptr<Fragment> fragment = fragment_queue.front();
-		fragment_queue.pop();
-		lk.unlock();
-		cv.notify_all();
-		read(fragment);
 	}
 }
 
@@ -46,7 +58,7 @@ void Player::prepare()
 // enter current fragment's character
 // act all contents in current fragment
 // exit current fragment's character
-void Player::read(shared_ptr<Fragment>& f)
+int Player::read(shared_ptr<Fragment>& f)
 {
 	string line, first;
 	size_t pos;
@@ -92,11 +104,12 @@ void Player::read(shared_ptr<Fragment>& f)
 		}
 		currPlay.enter(f);
 		act(f);
-		currPlay.exit(f);
+		return currPlay.exit(f);
 	}
 	else
 	{
 		cerr << f->filename << " player file can not open" << endl;
+		return FileNotExist;
 	}
 }
 

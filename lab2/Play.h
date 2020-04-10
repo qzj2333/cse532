@@ -26,6 +26,7 @@ private:
 	vector<string>::iterator it;	// iterator for the scene names vector
 
 public:
+	static bool end;	// true if entire play is end
 	string currCharacter;	// current active character of the play, "" if none
 	Play(vector<string>& n);
 	void recite(vector<container>::iterator& iter, unsigned int& scene_fragment_number);

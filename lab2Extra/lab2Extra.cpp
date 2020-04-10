@@ -20,7 +20,9 @@ enum constants
 {
 	enterLength = 6,
 	exitLength = 5,
-	endLength = 2
+	endLength = 2,
+	one = 1,
+	config_suffix = 5
 };
 
 enum arg
@@ -30,6 +32,7 @@ enum arg
 	rightNumberArgument = 2
 };
 
+// if input arguments contains input file, extract information from the file and produce config files and character files
 int main(int argc, char** argv)
 {
 	if (argc == rightNumberArgument)
@@ -48,18 +51,18 @@ int main(int argc, char** argv)
 				configName += token + "_";
 			}
 		}
-		configName = configName.substr(0, configName.length() - 5);
+		configName = configName.substr(0, configName.length() - config_suffix);
 
 		ifstream ifs;
-		ofstream ofs;
 		ifs.open(input);
-		ofs.open(output);
-		if (ifs.is_open() && ofs.is_open())
+		if (ifs.is_open())
 		{
+			ofstream ofs;
+			ofs.open(output);
 			map<string, vector<string>> characters;	// charName --> vector of all lines (each line has order & text)
 			string line;
 			string characterName;
-			int i = 1;
+			int i = one;
 			size_t posSpace;
 			size_t posDot;
 			size_t pos;
@@ -86,11 +89,6 @@ int main(int argc, char** argv)
 					if (line.substr(0, enterLength).compare("[Enter") == 0 && line.substr(line.length() - endLength).compare(".]") == 0)
 					{
 						continue;
-						/*posSpace = line.find(' ', 0);
-						posDot = line.find('.', 0);
-						characterName = line.substr(posSpace + 1, posDot - posSpace-1);
-						vector<string> vec;
-						characters.insert({ characterName, vec });*/
 					}
 					if(!exit && line.substr(0, exitLength).compare("[Exit") == 0 && line.substr(line.length() - 2).compare(".]") == 0)
 					{
@@ -123,12 +121,8 @@ int main(int argc, char** argv)
 						config.close();
 						characters.erase(leavingCharacter);	// delete exit character
 						fragment++;
-						i = 1;
+						i = one;
 						// clear all texts from non-leaving characters
-						/*for (auto character : characters)
-						{
-							characters[character.first].clear();
-						}*/
 						characters.clear(); 
 					}
 					else

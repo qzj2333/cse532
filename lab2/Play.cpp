@@ -1,5 +1,6 @@
 #include "Play.h"
 
+bool Play::end = false;
 // container sorted by order
 bool container::operator<(const container& c)
 {
@@ -92,7 +93,7 @@ int Play::exit(shared_ptr<Fragment> f)
 		cout << "[Exit " << f->character_name << ".]" << endl;
 		scene_fragment_counter++;
 		currCharacter = "";
-		line_counter = 1;	// self add
+		line_counter = one;
 		if (it != names.end())
 		{
 			if (it->compare("") != 0)
@@ -100,6 +101,12 @@ int Play::exit(shared_ptr<Fragment> f)
 				cout << *it << endl << endl;
 			}
 			it++;
+		}
+		else
+		{
+			cv.notify_all();
+			end = true;
+			return play_end;
 		}
 		cv.notify_all();
 		return success;
