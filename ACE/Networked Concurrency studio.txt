@@ -1,0 +1,98 @@
+1. Nicole Wang, Lin Li
+
+3. 
+[l.wang@linuxlab009 ACESimpleClient]$ ./ACESimpleClient
+no command line arguments
+[l.wang@linuxlab009 ACESimpleClient]$ ./ACESimpleClient 1 3 5
+1
+3
+5
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+./ACESimpleServer
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer 3 5
+has command line arguments
+
+4.
+int main(int argc, char* argv[])
+{
+		if(argc > 1)
+	{
+		cerr << "has command line arguments" << endl;
+		return 1;
+	}
+	else
+	{	
+		ACE_INET_Addr server(1025, ACE_LOCALHOST);
+		ACE_SOCK_Stream stream;
+		ACE_SOCK_Acceptor acceptor;
+
+		int call = acceptor.open(server, 1);
+		
+		if (call >= 0) 	// call success
+		{
+			ACE_TCHAR address[INET6_ADDRSTRLEN];
+			server.addr_to_string(address, sizeof(address));
+			ACE_OS::printf("%s\n", address);
+			int connect = acceptor.accept(stream);
+			if(connect >= 0)
+			{
+				char msg[BUFSIZ];
+				while ( stream.recv(msg, sizeof(msg)) > 0)
+				{
+					cout << msg << endl;
+				}
+				stream.close();
+			}
+			else
+			{
+				cerr << "Fail to connect" << endl;
+			}
+		}
+		return 0;
+	}
+}
+Check open() in order to make sure successfully connects the specified port and local host (or any other remote host). It will fail if specified host/port does not exist.
+Check accpet() in order to make sure there's client connects to current server. It will fail if no clients make connection with current server (in certain times if given).
+
+5. 
+int main(int argc, char* argv[])
+{
+	if(argc < 2)
+	{
+		cerr << "no command line arguments" << endl;
+		return 1;
+	}
+	else
+	{
+		ACE_INET_Addr server(1025, ACE_LOCALHOST);
+		ACE_SOCK_Stream stream;
+		ACE_SOCK_Connector connector;
+
+		int call = connector.connect(stream, server);
+		
+		if (call >= 0) 	// call success
+		{
+			for(int i = 1; i < argc; i++)
+			{
+				stream.send_n(argv[i], sizeof(argv[i]));
+			}
+			stream.close();
+		}
+		else
+		{
+			cerr << "Fail to connect server" << endl;
+		}
+		
+		return 0;
+	}
+}
+Check connect() in order to make sure successfully connects the specified port and local host (or any other remote host). It will fail if the server side of the specified host/port does not open acceptor.
+
+6.
+INPUT:
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+[l.wang@linuxlab009 ACESimpleClient]$ ./ACESimpleClient 1 3 5
+OUTPUT(only on server side):
+127.0.0.1:1025
+1
+5
