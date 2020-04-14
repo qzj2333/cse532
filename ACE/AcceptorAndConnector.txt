@@ -1,2 +1,77 @@
 1. Nicole Wang, Lin Li
-2. 
+
+2. [l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1025
+handle_close called mask match
+
+3. [l.wang@linuxlab009 ACESimpleClient]$ ./ACESimpleClient 3 5
+handle_close called mask match
+
+4. Without Client enter:
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1027
+handle signal
+ReadEvent::handle_close called
+Event::handle_close called
+Event::handle_close called
+destructor of event_reading
+
+With Client:
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1027
+3
+5
+handle signal
+ReadEvent::handle_close called
+Event::handle_close called
+Event::handle_close called
+destructor of event_reading
+
+5. 
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1027
+handle signal
+ReadEvent::handle_close called
+destructor of event_reading
+Event::handle_close called mask match
+Event::handle_close called mask not match
+
+6. Before modified, when Client send arguments: 3  5
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1027
+3
+5
+3
+5
+3
+5
+3
+5
+handle signal
+ReadEvent::handle_close called
+destructor of event_reading
+Event::handle_close called mask match
+Event::handle_close called mask not match
+
+Result after modified:
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1027
+3
+5
+ReadEvent::handle_close called
+destructor of event_reading
+handle signal
+Event::handle_close called mask match
+Event::handle_close called mask not match
+
+Comments for changes:
+- Since the reading event handler is constucted as its data member socket, we get rid of set_stream() method and just pass the socket and reactor object to reading event handler's constructor
+- Socket pointer is deleted in the destructor of the reading event handler
+- Instead of delete the reading event handler in connect event handler's handle_close() method as before, we delete it before return from the handle_input() method
+The handle_input() method of connecting event handler's object after modified:
+1. Dynamically allocate a socket object
+   if the socket is able to be open and connect:
+	2. Dynamically allocate a reading event handler and pass current object's reactor and the socket object construct in (1) to its constructor
+	3. Call reading event handler's handle_input()
+	4. Call reading event handler's handle_close() -- both object built in (1) and (2) will be deallocated in handle_close() method
+   else: delete the socket object constructed in (1) and prints out error message

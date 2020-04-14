@@ -20,7 +20,7 @@ public:
 	{
 		size = argc;
 		msg = argv;
-		server = new ACE_INET_Addr(1025, ACE_LOCALHOST);
+		server = new ACE_INET_Addr(1027, ACE_LOCALHOST);
 	};
 
 	virtual int handle_timeout (const ACE_Time_Value & atv, const void* p=0)
@@ -30,6 +30,7 @@ public:
 		{
 			for(int i = 1; i < size; i++)
 			{
+				cout << "send" << msg[i] << endl;
 				stream.send_n(msg[i], sizeof(msg[i]));
 			}
 			stream.close();
@@ -37,6 +38,27 @@ public:
 		else
 		{
 			cerr << "Fail to connect server" << endl;
+		}
+		return 0;
+	};
+	
+	// 3-3
+	virtual int handle_signal (int, siginfo_t* = 0, siginfo_t* = 0)
+	{
+		ACE_Reactor::instance()->end_reactor_event_loop();
+		ACE_Reactor::instance()->close();
+		return 0;
+	};
+	
+	virtual int handle_close (ACE_HANDLE handle, ACE_Reactor_Mask mask)
+	{
+		if(mask == ACE_Event_Handler::TIMER_MASK || mask == ACE_Event_Handler::SIGNAL_MASK)
+		{
+			cout << "handle_close called mask match" << endl;
+		}
+		else
+		{
+			cout << "handle_close called mask not match" << endl;;
 		}
 		return 0;
 	};
@@ -91,6 +113,7 @@ int main(int argc, char* argv[])
 		/*timer.schedule(&e, 0, startTime, intervalTime);
 		ACE_Thread_Manager::instance()->wait();*/
 		ACE_Reactor::instance()->schedule_timer(&e, 0, delayTime, intervalTime);
+		ACE_Reactor::instance()->register_handler(SIGINT, &e);	// 3-3
 		ACE_Reactor::instance()->run_event_loop();
 		
 		return 0;
