@@ -1,4 +1,4 @@
-#include <iostream>
+#include "../Interceptor.h"
 #include "ace/INET_Addr.h"
 #include "ace/SOCK_Stream.h"
 #include "ace/SOCK_Connector.h"
@@ -6,7 +6,6 @@
 #include "ace/Timer_Queue_Adapters.h"
 #include "ace/Timer_Heap.h"
 #include "ace/Reactor.h"
-using namespace std;
 
 class Event: public ACE_Event_Handler
 {
@@ -15,12 +14,14 @@ class Event: public ACE_Event_Handler
 	ACE_INET_Addr* server;
 	ACE_SOCK_Stream stream;
 	ACE_SOCK_Connector connector;
+	Interceptor* interceptor;	// 4-2
 public:
 	Event(int argc, char* argv[])
 	{
 		size = argc;
 		msg = argv;
 		server = new ACE_INET_Addr(1027, ACE_LOCALHOST);
+		interceptor = nullptr;	// 4-2
 	};
 
 	virtual int handle_timeout (const ACE_Time_Value & atv, const void* p=0)
@@ -30,7 +31,11 @@ public:
 		{
 			for(int i = 1; i < size; i++)
 			{
-				cout << "send" << msg[i] << endl;
+				if(interceptor != 0)
+				{
+					interceptor->operator()(*msg[i]);	// 4-3
+				}
+				cout << "send " << msg[i] << endl;
 				stream.send_n(msg[i], sizeof(msg[i]));
 			}
 			stream.close();
@@ -61,6 +66,12 @@ public:
 			cout << "handle_close called mask not match" << endl;;
 		}
 		return 0;
+	};
+	
+	// 4-3
+	void set_interceptor(Interceptor* i)
+	{
+		interceptor = i;
 	};
 };
 
@@ -109,6 +120,10 @@ int main(int argc, char* argv[])
 
 		Event e(argc, argv);
 		//e.handle_timeout(intervalTime); // 2-3
+		// 4-3
+		Rotate* p = new Rotate(1);
+		p->setNext(new Rotate(-1));	// 4-6
+		e.set_interceptor(p);
 		
 		/*timer.schedule(&e, 0, startTime, intervalTime);
 		ACE_Thread_Manager::instance()->wait();*/

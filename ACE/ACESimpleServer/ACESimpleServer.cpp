@@ -1,15 +1,14 @@
-#include <iostream>
+#include "../Interceptor.h"
 #include "ace/INET_Addr.h"
 #include "ace/SOCK_Stream.h"
 #include "ace/SOCK_Acceptor.h"
 #include "ace/Event_Handler.h"
 #include "ace/Reactor.h"
-using namespace std;
 
-// 
 class Event_Reading: public ACE_Event_Handler
 {
 	bool flag; // 3-5
+	Interceptor* interceptor;	// 4-2
 public:
 	ACE_SOCK_Stream* stream;  // ! dynamic allocating in set method
 	char msg[BUFSIZ];
@@ -18,6 +17,7 @@ public:
 		reactor(react);
 		stream = s;
 		flag = true;
+		interceptor = nullptr;	// 4-2
 		reactor()->register_handler(this, ACE_Event_Handler::READ_MASK);
 	}
 	
@@ -39,7 +39,13 @@ public:
 		//if recv < 0: "done reading"; call remove handler, and close stream
 		while(stream->recv(msg, sizeof(msg)) > 0)
 		{
-			cout << msg << endl;
+			// 4-3
+			if(interceptor != nullptr)
+			{
+				interceptor->operator()(*msg);
+				cout << msg << endl;
+			}
+			
 		}
 		return 0;
 	};
@@ -64,6 +70,12 @@ public:
 		}
 		
 	};
+	
+	// 4-3
+	void set_interceptor(Interceptor* i)
+	{
+		interceptor = i;
+	};
 };
 
 // 2-5
@@ -72,14 +84,18 @@ class Event: public ACE_Event_Handler
 	ACE_INET_Addr* server;
 	ACE_SOCK_Stream* stream;
 	ACE_SOCK_Acceptor acceptor;
-	bool isDelete;
+	// bool isDelete;
+	Interceptor* interceptor;	// 4-3
 public:
 	Event_Reading* read;
 	Event(ACE_Reactor* react)
 	{
 		reactor(react);
 		//read = re;
-		isDelete = false;
+		//isDelete = false;
+		interceptor = new Rotate(-2);	// 4-3
+		interceptor->setNext(new Subtract(1));	// 4-6
+		
 		server = new ACE_INET_Addr(1027, ACE_LOCALHOST);
 		int call = acceptor.open(*server, 1);
 		if(call >= 0)
@@ -99,12 +115,13 @@ public:
 	
 	virtual int handle_input (ACE_HANDLE h = ACE_INVALID_HANDLE)
 	{
-		stream = new ACE_SOCK_Stream();
+		stream = new ACE_SOCK_Stream();	// 3-6
 		if(acceptor.accept (*stream)>=0)
 		{
-			read = new Event_Reading(this->reactor(), stream);
+			read = new Event_Reading(this->reactor(), stream);	// 3-6
+			read->set_interceptor(interceptor);
 			read->handle_input();
-			read->handle_close(ACE_INVALID_HANDLE, 0);
+			read->handle_close(ACE_INVALID_HANDLE, 0);	// 3-6
 			return 0;
 		}
 		else
@@ -156,6 +173,12 @@ public:
 		this->reactor ()->close();
 		return 0;
 	};
+	
+	// 4-3
+	/*void set_interceptor(Interceptor* i)
+	{
+		interceptor = i;
+	};*/
 };
 
 int main(int argc, char* argv[])
@@ -212,6 +235,9 @@ int main(int argc, char* argv[])
 		//ACE_Reactor::instance()->register_handler(SIGINT, &e);	// 3-2
 		//ACE_Reactor::instance()->run_reactor_event_loop();	// 2-6
 		// delete read;	// 3-4
+		
+		// 4-3
+		//e.set_interceptor(p);
 		return 0;
 	}
 	

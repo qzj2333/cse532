@@ -1,0 +1,214 @@
+1. Nicole Wang, Lin Li
+
+2. 
+public Interceptor
+{
+public:
+	virtual void operator()(char&)=0;
+}
+
+3. Client method (only list code related to the Interceptor object):
+class Event: public ACE_Event_Handler
+{
+	Interceptor* interceptor;
+public:
+	Event(int argc, char* argv[])
+	{
+		interceptor = nullptr;
+	};
+
+	virtual int handle_timeout (const ACE_Time_Value & atv, const void* p=0)
+	{
+		int call = connector.connect(stream, *server);
+		if (call >= 0) 	// call success
+		{
+			for(int i = 1; i < size; i++)
+			{
+				cout << "send " << msg[i] << endl;
+				stream.send_n(msg[i], sizeof(msg[i]));
+				if(interceptor != 0)
+				{
+					interceptor->operator()(*msg[i]);
+				}
+			}
+			stream.close();
+		}
+		else
+		{
+			cerr << "Fail to connect server" << endl;
+		}
+		return 0;
+	};
+	
+	void set_interceptor(Interceptor* i)
+	{
+		interceptor = i;
+	};
+};
+
+int main(int argc, char* argv[])
+{
+		Event e(argc, argv);
+		Pass* p = new Pass();
+		e.set_interceptor(p);
+		
+		return 0;
+}
+
+Server Method (only list code related to the Interceptor object):
+class Event_Reading: public ACE_Event_Handler
+{
+	Interceptor* interceptor;
+public:
+	Event_Reading(ACE_Reactor* react, ACE_SOCK_Stream* s)
+	{
+		interceptor = nullptr;
+	}
+	
+	virtual ACE_HANDLE get_handle() const
+	{
+		return stream->get_handle();
+	};
+	
+	virtual int handle_input (ACE_HANDLE h = ACE_INVALID_HANDLE)
+	{
+		while(stream->recv(msg, sizeof(msg)) > 0)
+		{
+			if(interceptor != nullptr)
+			{
+				interceptor->operator()(*msg);
+			}
+		}
+		return 0;
+	};
+	void set_interceptor(Interceptor* i)
+	{
+		interceptor = i;
+	};
+};
+
+class Event: public ACE_Event_Handler
+{
+	Interceptor* interceptor;
+public:
+	Event(ACE_Reactor* react)
+	{
+		interceptor = nullptr;
+	};
+	
+	virtual int handle_input (ACE_HANDLE h = ACE_INVALID_HANDLE)
+	{
+		if(acceptor.accept (*stream)>=0)
+		{
+			read->set_interceptor(interceptor);
+			return 0;
+		}
+	};
+	
+	void set_interceptor(Interceptor* i)
+	{
+		interceptor = i;
+	};
+};
+
+int main(int argc, char* argv[])
+{
+		Event e(react);
+		Pass* p = new Pass();
+		e.set_interceptor(p);
+		
+		return 0;
+}
+
+4. 
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1027
+3
+a
+Z
+ReadEvent::handle_close called
+destructor of event_reading
+handle signal
+Event::handle_close called mask match
+Event::handle_close called mask not match
+
+[l.wang@linuxlab009 ACESimpleClient]$ ./ACESimpleClient 3 a Z
+send 4
+send b
+send A
+handle_close called mask match
+
+5. Add one more data member "factor" of integer type for the base class, where "factor" is set during constructor.
+   Then instead of rotation/add/subtract a stable hard coding number, rotation/add/subtract "factor"
+
+6. Add a data member "next" in the base class, which indicates the next functor of following object
+   Add an setNext() method in the base class, which adds given functor to the end of chain
+   In operator() method, after finish functioning the given char& (completed in previous steps), if current object's next variable is not null, call next's operator() function.
+Trails:
+   In Client:
+   1). In the contructor of the handler:
+	   a). Create an Add object with factor=1,
+       b). Create a Rotate object with factor=2
+       c). Set (a)'s next=(b)
+   2). In the handle_timeout() method (where send messages):
+	   For each sending character c: call (a)'s operator() method on c
+	   
+   In Server:
+   1). In the contructor of the handler:
+	   a). Create an Rotate object with factor=-2,
+       b). Create a Subtract object with factor=1
+       c). Set (a)'s next=(b)
+   2). In the handle_input() method (where receive messages):
+	   For each receiving character c: call (a)'s operator() method on c
+   
+7. For each of the following trails, Client always send one number, one lowercase letter and one uppercase letter
+Trails:
+1). Client: add(1) --> rotate (2); Server: rotate(-2) --> subtract(1)
+[l.wang@linuxlab009 ACESimpleClient]$ ./ACESimpleClient 3 a Z
+send 6
+send d
+send C
+
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1027
+3
+a
+Z
+ReadEvent::handle_close called
+destructor of event_reading
+handle signal
+Event::handle_close called mask match
+Event::handle_close called mask not match
+
+2). Client: add(1) --> subtract(2); Server: add(2) --> subtract(1)
+[l.wang@linuxlab009 ACESimpleClient]$ ./ACESimpleClient 6 c Y
+send 5
+send b
+send X
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1027
+6
+c
+Y
+ReadEvent::handle_close called
+destructor of event_reading
+handle signal
+Event::handle_close called mask match
+Event::handle_close called mask not match
+
+3). Client: rotate(1) --> rotate(-1); Server: rotate(1) --> rotate(-1)
+[l.wang@linuxlab009 ACESimpleClient]$ ./ACESimpleClient 6 c Y
+send 6
+send c
+send Y
+handle_close called mask match
+[l.wang@linuxlab009 ACESimpleServer]$ ./ACESimpleServer
+127.0.0.1:1027
+6
+c
+Y
+ReadEvent::handle_close called
+destructor of event_reading
+handle signal
+Event::handle_close called mask match
+Event::handle_close called mask not match
