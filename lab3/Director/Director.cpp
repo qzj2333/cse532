@@ -121,9 +121,12 @@ void Director::readOneScript(string scriptName)
 void Director::start(int id)
 {
 	int size = plays.size();
-	if(id >= 0 && id < size)
+	if(id >= 0 && id < size)	// check if id valid
 	{
 		play = plays[id];
+		// reset play
+		play->play->end = false;
+		players.clear();
 		for (int i = 0; i < num_players; i++)
 		{
 			shared_ptr<Player> player(new Player(*(play->play)));
@@ -137,12 +140,34 @@ void Director::start(int id)
 	}
 }
 
+void Director::quit()	// must have!
+{
+	int size = plays.size();
+	if(size>0)
+	{
+		play = plays[0];
+		for (int i = 0; i < num_players; i++)
+		{
+			shared_ptr<Player> player(new Player(*(play->play)));	// not dummy
+			players.push_back(player);
+		}
+		players.clear();
+	}
+	else
+	{
+		cerr << "Director::quit() has not plays" << endl;
+	}
+}
+
 void Director::end(int id)
 {
 	if(id == play->id)
 	{
-		players.clear();
-		play->play->end = false;
+		for (int i = 0; i < num_players; i++)
+		{
+			players[i]->stop();
+		}
+		//players.clear();
 	}
 	else
 	{
@@ -254,6 +279,7 @@ int Connection::handle_input(ACE_HANDLE h)
 		{
 			if(action.compare("quit") == 0)
 			{
+				director->quit();
 				handle_close(h, ACE_Reactor::CLR_MASK);
 				return success;
 			}
@@ -286,7 +312,8 @@ int Connection::handle_input(ACE_HANDLE h)
 
 int Connection::handle_signal(int signum, siginfo_t*,ucontext_t*)	// get rid of virtual and change last parameter from siginfo_t to ucontext_t
 {
-	// send to corresponding Director
+	director->quit();
+	// send id to Producer
 	string msg = to_string(currId);
 	cout << "send id: " << msg << endl;
 	int call = connector.connect(sendStream, *sendServer);
@@ -302,6 +329,7 @@ int Connection::handle_signal(int signum, siginfo_t*,ucontext_t*)	// get rid of 
 
 int Connection::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask mask)
 {
+	
 	this->reactor ()->end_reactor_event_loop();
 	this->reactor ()->close();
 	return success;
@@ -335,7 +363,6 @@ int main(int argc, char** argv)
 			// construct Connection
 			Connection c(a, d);	// make connection with producer
 		}
-		
 		return success;
 	}
 	else

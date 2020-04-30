@@ -12,14 +12,17 @@ private:
 	queue<shared_ptr<Fragment>> fragment_queue;	// working queue contains all fragment/tasks for current thread
 	mutex m;
 	condition_variable cv;
+	promise<void> exitSignal;
+	future<void> futureObj = exitSignal.get_future();
 public:
 	bool end;	// true if current player/thread takes no fragments
 	Player(Play& p);
-	~Player();
 	void prepare();	
 	int read(shared_ptr<Fragment>& f);
 	void act(shared_ptr<Fragment>& f);
 	void enter(shared_ptr<Fragment>& fragment);
+	bool isStop();
+	void stop();
 };
 
 #endif

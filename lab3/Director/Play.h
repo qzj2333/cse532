@@ -35,6 +35,7 @@ public:
 	void recite(vector<container>::iterator& iter, unsigned int& scene_fragment_number);
 	int enter(shared_ptr<Fragment> f);
 	int exit(shared_ptr<Fragment> f);
+	void reset();
 };
 
 #endif /* defined PLAY_H */

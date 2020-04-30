@@ -28,6 +28,7 @@ public:
 	void start(int id);
 	void end(int id);
 	string get_names();
+	void quit();
 };
 
 // connects director and producer, also holds n of directors

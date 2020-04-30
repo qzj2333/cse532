@@ -42,14 +42,14 @@ void Play::recite(vector<container>::iterator& iter, unsigned int& scene_fragmen
 			cout << endl << currCharacter << "." << endl;
 		}
 		cout << iter->text << endl;
-		line_counter++;	// self add
+		line_counter++;
 		
 	}
 	else if (scene_fragment_counter > scene_fragment_number || (scene_fragment_counter == scene_fragment_number && line_counter > iter->order))
 	{
 		cerr << "counter greater than order number " << iter->text << endl;
 	}
-	
+	this_thread::sleep_for(0.1s);	// for stop testing
 	lk.unlock();
 	cv.notify_all();
 	iter++;
@@ -98,35 +98,36 @@ int Play::exit(shared_ptr<Fragment> f)
 		on_stage--;
 		cout << "[Exit " << f->character_name << ".]" << endl;
 		exit_players++;
-		if(exit_players == f->num_players)	// TODO
+		scene_fragment_counter++;
+		currCharacter = "";
+		line_counter = one;
+		exit_players = 0;
+		if (it != names.end())
 		{
-			scene_fragment_counter++;
-			currCharacter = "";
-			line_counter = one;
-			exit_players = 0;
-			if (it != names.end())
+			if (it->compare("") != 0)
 			{
-				if (it->compare("") != 0)
-				{
-					cout << *it << endl << endl;
-				}
-				it++;
+				cout << *it << endl << endl;
 			}
-			else	// end of play reset everything to beginning
-			{
-				cv.notify_all();
-				end = true;
-				scene_fragment_counter = 0;
-				it = names.begin();
-				return play_end;
-			}
+			it++;
 		}
-		else
+		else	// end of play: reset everything to beginning
 		{
-			cout << "not finish yet" << endl;
+			cv.notify_all();
+			end = true;
+			reset();
+			return play_end;
 		}
 		cv.notify_all();
 		return success;
 	}
+}
+
+void Play::reset()
+{
+	scene_fragment_counter = 0;
+	it = names.begin();
+	currCharacter = "";
+	line_counter = one;
+	exit_players = 0;
 }
 

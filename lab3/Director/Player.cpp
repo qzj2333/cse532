@@ -1,35 +1,25 @@
 #include "Player.h"
 
 // construct a new thread
-Player::Player(Play& p) :currPlay(p), end(false)
+Player::Player(Play& p) : currPlay(p), end(false)
 {
 	thread newT([this]()
 		{
 			this->prepare();
 		});
 	t = move(newT);
+	t.detach();	// new change from join to detach
 };
-
-// join the thread
-Player::~Player()
-{
-	cv.notify_all();
-	if (t.joinable())
-	{
-		t.join();
-	}
-}
 
 // Get one fragment from working queue, call read to process all works for that fragment
 void Player::prepare()
 {
-	while (!fragment_queue.empty() || (!end && !Play::end)) 
+	while((!fragment_queue.empty() || (!end && !Play::end)) && !isStop()) 
 	{
 		unique_lock<mutex> lk(m);
-
 		cv.wait_for(lk, 400ms, [this] 
 		{
-			return !this->fragment_queue.empty() || end || Play::end;
+			return !this->fragment_queue.empty() || end || Play::end || isStop();
 		});
 		if(!this->fragment_queue.empty())
 		{
@@ -38,8 +28,13 @@ void Player::prepare()
 
 			lk.unlock();
 			cv.notify_all();
-			if (read(fragment) == play_end)
+			int result = read(fragment);
+			if (result == play_end || result == stopped)
 			{
+				if(result == stopped)
+				{
+					currPlay.reset();	// reset play
+				}
 				cv.notify_all();
 				break;
 			}
@@ -47,9 +42,17 @@ void Player::prepare()
 		else
 		{
 			lk.unlock();
+			if(isStop())
+			{
+				currPlay.reset();	// reset play
+			}
 			cv.notify_all();
-			return;
 		}
+	}
+	if(isStop())
+	{
+		currPlay.reset();	// reset play
+		cv.notify_all();
 	}
 }
 
@@ -59,6 +62,10 @@ void Player::prepare()
 // exit current fragment's character
 int Player::read(shared_ptr<Fragment>& f)
 {
+	if(isStop())
+	{
+		return stopped;
+	}
 	string line, first;
 	size_t pos;
 	int lineNum;
@@ -103,23 +110,30 @@ int Player::read(shared_ptr<Fragment>& f)
 		}
 		currPlay.enter(f);
 		act(f);
-		return currPlay.exit(f);
+		if(!isStop())
+		{
+			return currPlay.exit(f);
+		}
+		else
+		{
+			return stopped;
+		}
 	}
 	else
 	{
 		cerr << f->filename << " player file can not open" << endl;
 		return FileNotExist;
 	}
+	return success;
 }
 
 // call play's recite to display all contents in current fragment with other fragments in correct order
 void Player::act(shared_ptr<Fragment>& f)
 {
 	vector<container>::iterator iter = content.begin();
-	while(iter != content.end())
+	while(iter != content.end() && !isStop())
 	{		
-		currPlay.recite(iter, f->fragment_number);
-		// iter is increment in recite method, no need to increment iter here
+		currPlay.recite(iter, f->fragment_number);	// iter is increment in recite method, no need to increment iter here
 	}
 }
 
@@ -130,4 +144,16 @@ void Player::enter(shared_ptr<Fragment>& fragment)
 	fragment_queue.push(fragment);
 	lk.unlock();
 	cv.notify_all();
+}
+
+bool Player::isStop()
+{
+	if (futureObj.wait_for(chrono::milliseconds(0)) == future_status::timeout)
+		return false;
+	return true;
+}
+
+void Player::stop()
+{
+	exitSignal.set_value();
 }

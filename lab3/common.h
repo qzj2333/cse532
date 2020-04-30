@@ -15,8 +15,9 @@
 #include <cctype>
 #include <locale>
 #include <queue>
-#include <future>
 #include <map>
+#include <chrono>
+#include <future>
 #include "ace/INET_Addr.h"
 #include "ace/SOCK_Stream.h"
 #include "ace/SOCK_Acceptor.h"
@@ -31,16 +32,17 @@ using namespace std;
 
 enum returnValues // return label values
 {
-	success = 0,
-	inputNotCorrect = 1,
-	threadingError = 2,
-	FileNotExist = 3,
-	noValidInfo = 4,
-	enter_fail = 5,
-	exit_fail = 6,
-	play_end = 7,
-	invalidPort = 8,
-	invalid_input = 9
+	success,
+	inputNotCorrect,
+	threadingError,
+	FileNotExist,
+	noValidInfo,
+	enter_fail,
+	exit_fail,
+	play_end,
+	invalidPort,
+	invalid_input,
+	stopped
 };
 
 enum constants
