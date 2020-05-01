@@ -17,10 +17,10 @@ class Director
 {
 	int num_players;
 	int available_id;
-	vector<shared_ptr<Player>> players;	// all players
-	vector<shared_ptr<SinglePlay>> plays;
 	int max_config_lines;	// max number of config lines among all script files
+	vector<shared_ptr<SinglePlay>> plays;
 public:
+	vector<shared_ptr<Player>> players;	// all players
 	shared_ptr<SinglePlay> play;	// current play
 	Director(vector<string> names, int min_num_players = 0, bool flag = false);
 	void readOneScript(string scriptName);

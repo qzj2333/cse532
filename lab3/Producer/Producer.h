@@ -1,20 +1,8 @@
 #include "../common.h"
 
-enum values
-{
-	notRunning = -1
-};
-
-/*struct play
-{
-	int id;
-	string play_name;
-}*/
-
 struct connection
 {
 	map<int, string> plays;	// int is producer global ID
-	bool isRunning = false;
 	int factor;	// global ID - factor = ID in director, also indicates id of current connection
 	int currentRunID = notRunning;
 	ACE_INET_Addr* server;

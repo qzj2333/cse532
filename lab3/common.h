@@ -42,24 +42,37 @@ enum returnValues // return label values
 	play_end,
 	invalidPort,
 	invalid_input,
-	stopped
+	stopped,
+	fail_connect
 };
 
 enum constants
 {
-	one = 1
+	one = 1,
+	notRunning = -1,
+	first_port = 2000
 };
 
 enum arg // argument position	
 {
 	programName = 0,
-	rightNumberArgument = 4,
+	rightNumberArgument = 5,
 	script_file_pos = 4,
 	min_players_pos = 3,
 	override_pos = 3,
 	port_pos = 1,
 	addr_pos = 2,
 	correct_num_args = 2
+};
+
+// contains info for a line in any character file
+struct container
+{
+	unsigned int order;
+	string characterName;
+	string text;
+
+	bool operator<(const container& c);
 };
 
 struct Fragment // a fragment of the scene

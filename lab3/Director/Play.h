@@ -4,15 +4,7 @@
 #define PLAY_H
 #include "../common.h"
 
-// contains info for a line in any character file
-struct container
-{
-	unsigned int order;
-	string characterName;
-	string text;
 
-	bool operator<(const container& c);
-};
 
 class Play
 {
@@ -24,7 +16,7 @@ private:
 	unsigned int on_stage;	// # of characters currently on stage
 	vector<string> names;	// all scene names of current script
 	vector<string>::iterator it;	// iterator for the scene names vector
-
+	vector<string> characters;
 public:
 	int exit_players;
 	int min_players;

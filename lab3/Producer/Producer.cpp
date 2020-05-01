@@ -31,7 +31,7 @@ void Producer::refresh_list()
 	{
 		for(auto p=c->plays.begin(); p != c->plays.end(); p++)
 		{
-			if(c->isRunning)
+			if(c->currentRunID != notRunning)
 			{
 				if(c->currentRunID == p->first)	// director is playing this play
 				{
@@ -86,13 +86,6 @@ int Producer::handle_input(ACE_HANDLE h)
 					cerr << "Invalid Input" << endl;
 					return invalid_input;
 				}
-				for(shared_ptr<connection> c: connections)
-				{
-					for(auto p=c->plays.begin(); p != c->plays.end(); p++)
-					{
-						cout << p->first << " " << p->second << endl;
-					}
-				}
 				if(action.compare("start") != 0 && action.compare("stop") != 0)
 				{
 					cerr << "No such action." << endl;
@@ -111,14 +104,13 @@ int Producer::handle_input(ACE_HANDLE h)
 						
 								if(action.compare("start") == 0)
 								{
-									if(c->isRunning)
+									if(c->currentRunID != notRunning)
 									{
 										cerr << "current director is running." << endl;
 										return invalid_input;
 									}
 									else
 									{
-										c->isRunning = true;
 										c->currentRunID = number;
 										// send to corresponding director
 										string msg = "start " + to_string(number-c->factor);
@@ -136,7 +128,6 @@ int Producer::handle_input(ACE_HANDLE h)
 									}
 									else
 									{
-										c->isRunning = false;
 										c->currentRunID = notRunning;
 										// send to corresponding Director with play's director ID
 										string msg = "stop " + to_string(number-c->factor);
@@ -201,54 +192,80 @@ int Producer::handle_input(ACE_HANDLE h)
 				}
 				else
 				{
-				istringstream iss(message);
-				// make new connection
-				string play_name;
-				shared_ptr<connection> c(new connection());
-				c->factor = global_last_id;
-				while(iss >> play_name)
-				{
-					if(play_name.compare(";") == 0)	// get address
+					istringstream checkEnd(message);
+					string end_key_word;
+					if(checkEnd >> end_key_word && end_key_word.compare("end") == 0)
 					{
-						string a;
-						iss >> a;
-						ACE_INET_Addr* newServer = new ACE_INET_Addr();
-						newServer->string_to_addr(a.c_str());
-						
-						ACE_SOCK_Stream* newStream = new ACE_SOCK_Stream();
-						ACE_SOCK_Connector* connector = new ACE_SOCK_Connector();
-						int call = connector->connect(*newStream, *newServer);
-						while(call < 0)
+						int playID;
+						int directorID;
+						if(checkEnd >> playID && checkEnd >> directorID)
 						{
-							call = connector->connect(*newStream, *newServer);
-						}							
-						c->stream = newStream;
-						c->server = newServer;
-						c->connector = connector;
-						// clear msg buffer
-						for(int i = 0; i < BUFSIZ; i++)
-						{
-							msg[i] = '\0';
+							// find corresponding connection
+							for(size_t i = 0; i < connections.size(); i++)
+							{
+								// set director available
+								if(connections[i]->factor == directorID)
+								{
+									connections[i]->currentRunID = notRunning;
+								}
+							}
 						}
-						// send back its global id
-						string msg = to_string(c->factor);
-						c->stream->send_n(msg.c_str(), (int)msg.size());
-						c->stream->close();
+						else
+						{
+							cerr << "invalid end message receiving" << endl;
+						}
 					}
 					else
 					{
-						c->plays.insert({global_last_id, play_name});
-						global_last_id++;
+						istringstream iss(message);
+						// make new connection
+						string play_name;
+						shared_ptr<connection> c(new connection());
+						c->factor = global_last_id;
+						while(iss >> play_name)
+						{
+							if(play_name.compare(";") == 0)	// get address
+							{
+								string a;
+								iss >> a;
+								ACE_INET_Addr* newServer = new ACE_INET_Addr();
+								newServer->string_to_addr(a.c_str());
+						
+								ACE_SOCK_Stream* newStream = new ACE_SOCK_Stream();
+								ACE_SOCK_Connector* connector = new ACE_SOCK_Connector();
+								int call = connector->connect(*newStream, *newServer);
+								while(call < 0)
+								{
+									call = connector->connect(*newStream, *newServer);
+								}							
+								c->stream = newStream;
+								c->server = newServer;
+								c->connector = connector;
+								// clear msg buffer
+								for(int i = 0; i < BUFSIZ; i++)
+								{
+									msg[i] = '\0';
+								}
+								// send back its global id
+								string msg = to_string(c->factor);
+								c->stream->send_n(msg.c_str(), (int)msg.size());
+								c->stream->close();
+							}
+							else
+							{
+								c->plays.insert({global_last_id, play_name});
+								global_last_id++;
+							}
+						}
+						connections.push_back(c);
 					}
-				}
-				connections.push_back(c);
 				}
 			}
 			refresh_list();
 			return success;
 		}
 		cerr << "Fail to connect" << endl;
-		return 1;
+		return fail_connect;
 	}
 }
 

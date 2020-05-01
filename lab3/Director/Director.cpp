@@ -109,12 +109,19 @@ void Director::readOneScript(string scriptName)
 		currPlay->scene_names = scene_names;
 		currPlay->fragments = fragments;
 		currPlay->play = new Play(scene_names);
-		currPlay->name = scriptName;	// !!!TODO change to proper play name
+		
+		// get proper play name from scipt file name
+		// find first_
+		int pos1 = scriptName.find_first_of('_');
+		// find last_
+		int pos2 = scriptName.find_last_of('_');
+		// substring between is the proper name
+		currPlay->name = scriptName.substr(pos1+one, pos2-pos1-1);
 		plays.push_back(currPlay);
 	}
 	else
 	{
-		throw "Director Exception";
+		cerr << "script file not exist" << endl;
 	}
 }
 
@@ -125,12 +132,13 @@ void Director::start(int id)
 	{
 		play = plays[id];
 		// reset play
-		play->play->end = false;
+		play->play->end = false; // maybe not need?
+		play->play->reset();
 		players.clear();
 		for (int i = 0; i < num_players; i++)
 		{
 			shared_ptr<Player> player(new Player(*(play->play)));
-			players.push_back(player);
+			players.push_back(move(player));
 		}
 		cue();
 	}
@@ -148,10 +156,9 @@ void Director::quit()	// must have!
 		play = plays[0];
 		for (int i = 0; i < num_players; i++)
 		{
-			shared_ptr<Player> player(new Player(*(play->play)));	// not dummy
-			players.push_back(player);
+			shared_ptr<Player> player(new Player(*(play->play)));
+			players.emplace_back(player);
 		}
-		players.clear();
 	}
 	else
 	{
@@ -167,7 +174,17 @@ void Director::end(int id)
 		{
 			players[i]->stop();
 		}
-		//players.clear();
+		/*
+		for (int i = 0; i < num_players; i++)
+		{
+			while(!players[i]->isStop())
+			{
+				continue;
+			}
+		}
+		play->play->reset();
+		players.clear();
+		*/
 	}
 	else
 	{
@@ -183,9 +200,11 @@ void Director::cue()
 	play->play->print_first_scene();
 	for (shared_ptr<Fragment> f : play->fragments)
 	{
+		//cout << "#############" << f->fragment_number << f->filename << endl;
 		players[c%players.size()]->enter(f);	// (try to) equally assign each fragment to different players
 		c++;
 	}
+	
 	if (c < players.size())
 	{
 		for (size_t i = c; i < players.size(); i++)
@@ -217,14 +236,10 @@ Connection::Connection(string addr, shared_ptr<Director> d)
 	
 	// print ip address
 	ACE_TCHAR address[INET6_ADDRSTRLEN];
-	sendServer->addr_to_string(address, sizeof(address));
 	ACE_OS::printf("sending address: %s\n", address);
 	int call = connector.connect(sendStream, *sendServer);
 	if (call >= 0) 	// call success
 	{
-		sendStream.send_n(msg.c_str(), (int)msg.size());
-		sendStream.close();
-	
 		reactor(ACE_Reactor::instance());
 		receiveServer = new ACE_INET_Addr();
 		// set up receive acceptor
@@ -232,6 +247,8 @@ Connection::Connection(string addr, shared_ptr<Director> d)
 		int result = acceptor.open(*receiveServer, 1);
 		if (result >= 0) 	// call success
 		{
+			sendStream.send_n(msg.c_str(), (int)msg.size());
+			sendStream.close();
 			// print ip address
 			ACE_TCHAR address[INET6_ADDRSTRLEN];
 			receiveServer->addr_to_string(address, sizeof(address));
@@ -241,10 +258,14 @@ Connection::Connection(string addr, shared_ptr<Director> d)
 			this->reactor()->register_handler(this, ACE_Event_Handler::ACCEPT_MASK);
 			this->reactor()->run_reactor_event_loop();	
 		}
+		else
+		{
+			cerr << "address and port already in use" << endl;
+		}
 	}
 	else
 	{
-		cerr << "Fail to connect producer" << endl;
+		cerr << "Fail to connect producer. Port and address not match." << endl;
 	}
 }
 
@@ -287,7 +308,26 @@ int Connection::handle_input(ACE_HANDLE h)
 			{
 				if(action.compare("start") == 0)
 				{
-					director->start(id);
+					director->start(id); // returns when play end
+					
+					thread t([this, id]()
+					{
+						while(!this->director->play->play->end)	// wait until play end or stop !!!!change to CV?
+						{
+							continue;
+						}
+						// send end msg to producer
+						string msg = "end " + to_string(id) + " " + to_string(this->currId);	// stop playID directorID
+						cout << "send " << msg << endl;
+						int call = this->connector.connect(this->sendStream, *(this->sendServer));
+						if (call >= 0) 	// call success
+						{
+							this->sendStream.send_n(msg.c_str(), (int)msg.size());
+							this->sendStream.close();
+						}
+					});
+					t.detach();
+					
 					return success;
 				}
 				else if(action.compare("stop") == 0)
@@ -304,10 +344,10 @@ int Connection::handle_input(ACE_HANDLE h)
 			return success;
 		}
 		cerr << "invalid msg receiving" << endl;
-		return 1;
+		return invalid_input;
 	}
 	}
-	return 1;
+	return invalid_input;
 }
 
 int Connection::handle_signal(int signum, siginfo_t*,ucontext_t*)	// get rid of virtual and change last parameter from siginfo_t to ucontext_t
