@@ -1,5 +1,7 @@
 #include "Producer.h"
 
+// constructor
+// open acceptor, prints out address and register events
 Producer::Producer()
 {
 	global_last_id = 0;
@@ -24,6 +26,7 @@ Producer::Producer()
 	}
 }
 
+// refresh play list
 void Producer::refresh_list()
 {
 	cout << "----- play list -----" << endl;
@@ -51,7 +54,8 @@ void Producer::refresh_list()
 	cout << "----- list end -----" << endl;
 }
 
-
+// called when user ctrl+c
+// send quit msg to all clients / director, deregister events and close reactor
 int Producer::handle_signal(int signum, siginfo_t*,ucontext_t*)	// get rid of virtual and change last parameter from siginfo_t to ucontext_t
 {
 	// send to corresponding Director
@@ -67,6 +71,16 @@ int Producer::handle_signal(int signum, siginfo_t*,ucontext_t*)	// get rid of vi
 	return success;
 };
 
+// called when user input or one of clients send message
+// if user input:
+// 1. check if input message is valid
+// 2. either start/stop corresponding play or global quit
+// if exit director send msg for quit:
+// 1. if msg is finish one play: update status and refresh list
+// 2. if director quit: rase corresponding plays from list and refresh list
+// if a new director join with msg contains its address, port and play list:
+// 1. issue a unique id to new director
+// 2. add its plays to list and refresh list
 int Producer::handle_input(ACE_HANDLE h)
 {
 	if(h==ACE_STDIN)	// for user input
@@ -75,7 +89,7 @@ int Producer::handle_input(ACE_HANDLE h)
 		getline(cin, user_input);
 		istringstream iss(user_input);
 		string action;
-		int number = -1;
+		int number = notValid;
 		string extra;
 		if(iss >> action)
 		{
@@ -266,6 +280,8 @@ int Producer::handle_input(ACE_HANDLE h)
 	}
 }
 
+// called when user hits ctrl+c 
+// deregister all events and close reactor
 int Producer::handle_close (ACE_HANDLE handle, ACE_Reactor_Mask mask)
 {
 	this->reactor ()->end_reactor_event_loop();
@@ -278,6 +294,8 @@ ACE_HANDLE Producer::get_handle() const
 	return acceptor.get_handle();
 };
 
+// main method for server side:
+// check user input and construct producer if input is valid
 int main(int argc, char* argv[])
 {
 
@@ -289,7 +307,6 @@ int main(int argc, char* argv[])
 	else
 	{
 		Producer p;
-		ACE_Reactor::instance()->run_event_loop();
 		return success;
 	}
 

@@ -1,6 +1,7 @@
 #include "../common.h"
 
-struct connection
+// contains all info for one client / director
+struct connection	
 {
 	map<int, string> plays;	// int is producer global ID
 	int factor;	// global ID - factor = ID in director, also indicates id of current connection
@@ -10,15 +11,15 @@ struct connection
 	ACE_SOCK_Stream* stream;
 };
 
-
+// server side 
 class Producer: public ACE_Event_Handler
 {
 	ACE_INET_Addr* server;
-	ACE_SOCK_Acceptor acceptor;	// stream will create each time
+	ACE_SOCK_Acceptor acceptor;
 	ACE_Reactor* react;
 	ACE_SOCK_Stream stream;
-	vector<shared_ptr<connection>> connections;
-	int global_last_id;
+	vector<shared_ptr<connection>> connections;	// list of clients
+	int global_last_id;	// the id for next join director / client
 	void refresh_list();
 public:
 	Producer();

@@ -23,10 +23,8 @@ private:
 	unsigned int on_stage;	// # of characters currently on stage
 	vector<string> names;	// all scene names of current script
 	vector<string>::iterator it;	// iterator for the scene names vector
-	vector<string> characters;
 public:
-	int exit_players;
-	int min_players;
+	int exit_players;	// number of players exist in one fragment
 	static bool end;	// true if entire play is end
 	string currCharacter;	// current active character of the play, "" if none
 	Play(vector<string>& n);

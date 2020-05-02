@@ -15,6 +15,7 @@ Player::Player(Play& p, bool isQuit) : currPlay(p), end(false)
 	t.detach();
 };
 
+// destructor of player 
 Player::~Player()
 {
 	clearQueue();
@@ -146,6 +147,7 @@ void Player::enter(shared_ptr<Fragment>& fragment)
 	cv.notify_all();
 }
 
+// check if current player is stopped
 bool Player::isStop()
 {
 	if (stopFuture.wait_for(chrono::milliseconds(0)) == future_status::timeout)
@@ -155,6 +157,7 @@ bool Player::isStop()
 	return true;
 }
 
+// stop current player and let it exit
 void Player::stop()
 {
 	stopSignal.set_value();
@@ -162,6 +165,7 @@ void Player::stop()
 	cv.notify_all();
 }
 
+// clear fragment queue
 void Player::clearQueue()
 {
 	while(!fragment_queue.empty())

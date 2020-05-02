@@ -124,6 +124,7 @@ int Play::exit(shared_ptr<Fragment> f, bool stop)
 	}
 }
 
+// reset current play's counter variables
 void Play::reset()
 {
 	scene_fragment_counter = 0;
