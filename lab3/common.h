@@ -50,29 +50,19 @@ enum constants
 {
 	one = 1,
 	notRunning = -1,
-	first_port = 2000
+	notValid = -1
 };
 
-enum arg // argument position	
+enum arg // argument position
 {
 	programName = 0,
-	rightNumberArgument = 5,
+	rightNumberArgument = 4,
 	script_file_pos = 4,
 	min_players_pos = 3,
 	override_pos = 3,
 	port_pos = 1,
 	addr_pos = 2,
 	correct_num_args = 2
-};
-
-// contains info for a line in any character file
-struct container
-{
-	unsigned int order;
-	string characterName;
-	string text;
-
-	bool operator<(const container& c);
 };
 
 struct Fragment // a fragment of the scene

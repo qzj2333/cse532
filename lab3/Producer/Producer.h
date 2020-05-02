@@ -10,6 +10,7 @@ struct connection
 	ACE_SOCK_Stream* stream;
 };
 
+
 class Producer: public ACE_Event_Handler
 {
 	ACE_INET_Addr* server;

@@ -4,7 +4,14 @@
 #define PLAY_H
 #include "../common.h"
 
+struct container
+{
+	unsigned int order;
+	string characterName;
+	string text;
 
+	bool operator<(const container& c);
+};
 
 class Play
 {
@@ -25,8 +32,8 @@ public:
 	Play(vector<string>& n);
 	void print_first_scene();
 	void recite(vector<container>::iterator& iter, unsigned int& scene_fragment_number);
-	int enter(shared_ptr<Fragment> f);
-	int exit(shared_ptr<Fragment> f);
+	int enter(shared_ptr<Fragment> f, bool stop = false);
+	int exit(shared_ptr<Fragment> f, bool stop = false);
 	void reset();
 };
 

@@ -8,7 +8,6 @@ class Player {
 private:
 	Play& currPlay;	// the play it serves for
 	thread t;	// corresponding thread of current player
-	//vector<container> content;	// contains all contents of a fragment in the working queue 
 	queue<shared_ptr<Fragment>> fragment_queue;	// working queue contains all fragment/tasks for current thread
 	mutex m;
 	condition_variable cv;
@@ -16,9 +15,9 @@ private:
 	future<void> stopFuture;
 public:
 	bool end;	// true if current player/thread takes no fragments
-	Player(Play& p);
+	Player(Play& p, bool isQuit = false);
 	~Player();
-	void prepare();	
+	void prepare();
 	int read(shared_ptr<Fragment>& f);
 	void act(shared_ptr<Fragment>& f, vector<container>& content);
 	void enter(shared_ptr<Fragment>& fragment);

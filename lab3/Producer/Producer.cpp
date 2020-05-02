@@ -16,8 +16,8 @@ Producer::Producer()
 		this->reactor()->register_handler(SIGINT, this);
 		this->reactor()->register_handler(this, ACE_Event_Handler::ACCEPT_MASK);
 		this->reactor()->register_handler(ACE_STDIN, this, ACE_Event_Handler::READ_MASK);
-		this->reactor()->run_reactor_event_loop();	
-	}	
+		this->reactor()->run_reactor_event_loop();
+	}
 	else
 	{
 		cerr << "Fail to connect" << endl;
@@ -35,16 +35,16 @@ void Producer::refresh_list()
 			{
 				if(c->currentRunID == p->first)	// director is playing this play
 				{
-					cout << p->first << " " << p->second << " in progress" << endl; 
+					cout << p->first << " " << p->second << " in progress" << endl;
 				}
 				else	// director is playing other play
 				{
-					cout << p->first << " " << p->second << " unavailable" << endl; 
+					cout << p->first << " " << p->second << " unavailable" << endl;
 				}
 			}
 			else	// director is playing
 			{
-				cout << p->first << " " << p->second << " available" << endl; 
+				cout << p->first << " " << p->second << " available" << endl;
 			}
 		}
 	}
@@ -101,7 +101,7 @@ int Producer::handle_input(ACE_HANDLE h)
 							if(p->first == number)
 							{
 								find = true;
-						
+
 								if(action.compare("start") == 0)
 								{
 									if(c->currentRunID != notRunning)
@@ -171,14 +171,11 @@ int Producer::handle_input(ACE_HANDLE h)
 			char msg[BUFSIZ];
 			while(stream.recv(msg, sizeof(msg)) > 0)
 			{
-				cout << "receive " << msg << endl;
-				
 				string message = string(msg);
 				int directorID;
 				istringstream checkID(message);
 				if(checkID >> directorID)
 				{
-					cout << directorID << endl;
 					// find corresponding connection
 					for(size_t i = 0; i < connections.size(); i++)
 					{
@@ -230,14 +227,14 @@ int Producer::handle_input(ACE_HANDLE h)
 								iss >> a;
 								ACE_INET_Addr* newServer = new ACE_INET_Addr();
 								newServer->string_to_addr(a.c_str());
-						
+
 								ACE_SOCK_Stream* newStream = new ACE_SOCK_Stream();
 								ACE_SOCK_Connector* connector = new ACE_SOCK_Connector();
 								int call = connector->connect(*newStream, *newServer);
 								while(call < 0)
 								{
 									call = connector->connect(*newStream, *newServer);
-								}							
+								}
 								c->stream = newStream;
 								c->server = newServer;
 								c->connector = connector;
@@ -283,7 +280,7 @@ ACE_HANDLE Producer::get_handle() const
 
 int main(int argc, char* argv[])
 {
-	
+
 	if(argc > correct_num_args)
 	{
 		cout << "usage: " << argv[0] << "[port]" << endl;
@@ -292,17 +289,8 @@ int main(int argc, char* argv[])
 	else
 	{
 		Producer p;
-		/*ACE_Thread_Timer_Queue_Adapter<ACE_Timer_Heap> timer;
-		timer.activate();
-		ACE_Time_Value intervalTime(3, 0);
-		ACE_Time_Value delayTime (0,0);
-	
-		ACE_Reactor::instance()->schedule_timer(&p, 0, delayTime, intervalTime);	// handle user input every 3s
-		*/
-		//ACE_Reactor::instance()->register_handler(SIGINT, &p);	// handle ctrl-C!!!!!!!!!!!!
-		
 		ACE_Reactor::instance()->run_event_loop();
 		return success;
 	}
-	
+
 }

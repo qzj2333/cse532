@@ -5,9 +5,10 @@
 // read each line in the script file, save all scene names and each character's name and corresponding file into each fragments
 // create the play and number of players
 Director::Director(vector<string> names, int min_num_players, bool flag)
-{		
+{
 	max_config_lines = 0;
 	available_id = 0;
+	isRunning = false;
 	for(string name: names)
 	{
 		readOneScript(name);
@@ -42,7 +43,7 @@ void Director::readOneScript(string scriptName)
 		{
 			if (!line.empty())
 			{
-				
+
 				firstSpace = line.find_first_of(" ");
 				if (firstSpace > 0 && firstSpace < line.size())
 				{
@@ -76,7 +77,7 @@ void Director::readOneScript(string scriptName)
 									f->filename = fName;
 									f->fragment_number = fragNum;
 									fragments.push_back(f);
-									curr_config_lines++;									
+									curr_config_lines++;
 								}
 								num_players++;
 							}
@@ -109,7 +110,7 @@ void Director::readOneScript(string scriptName)
 		currPlay->scene_names = scene_names;
 		currPlay->fragments = fragments;
 		currPlay->play = new Play(scene_names);
-		
+
 		// get proper play name from scipt file name
 		// find first_
 		int pos1 = scriptName.find_first_of('_');
@@ -132,7 +133,7 @@ void Director::start(int id)
 	{
 		play = plays[id];
 		// reset play
-		play->play->end = false; // maybe not need?
+		play->play->end = false;
 		play->play->reset();
 		players.clear();
 		for (int i = 0; i < num_players; i++)
@@ -156,10 +157,11 @@ void Director::quit()	// must have!
 		play = plays[0];
 		for (int i = 0; i < num_players; i++)
 		{
-			shared_ptr<Player> player(new Player(*(play->play)));
+			shared_ptr<Player> player(new Player(*(play->play), true));
 			players.emplace_back(player);
 		}
 	}
+
 	else
 	{
 		cerr << "Director::quit() has not plays" << endl;
@@ -168,23 +170,12 @@ void Director::quit()	// must have!
 
 void Director::end(int id)
 {
-	if(id == play->id)
+	if(id == play->id || id == -1)
 	{
-		for (int i = 0; i < num_players; i++)
+		for (int i = 0; i < (int)players.size(); i++)
 		{
 			players[i]->stop();
 		}
-		/*
-		for (int i = 0; i < num_players; i++)
-		{
-			while(!players[i]->isStop())
-			{
-				continue;
-			}
-		}
-		play->play->reset();
-		players.clear();
-		*/
 	}
 	else
 	{
@@ -200,11 +191,10 @@ void Director::cue()
 	play->play->print_first_scene();
 	for (shared_ptr<Fragment> f : play->fragments)
 	{
-		//cout << "#############" << f->fragment_number << f->filename << endl;
 		players[c%players.size()]->enter(f);	// (try to) equally assign each fragment to different players
 		c++;
 	}
-	
+
 	if (c < players.size())
 	{
 		for (size_t i = c; i < players.size(); i++)
@@ -227,15 +217,16 @@ string Director::get_names()
 Connection::Connection(string addr, shared_ptr<Director> d)
 {
 	director = d;
-	currId = -1;
+	currId = notValid;
 	// get play names from d
 	string msg = d->get_names();
 	msg += "; " + addr;	// also send address
 	// sent play list to producer
 	sendServer = new ACE_INET_Addr(1025, ACE_LOCALHOST);
-	
+
 	// print ip address
 	ACE_TCHAR address[INET6_ADDRSTRLEN];
+	sendServer->addr_to_string(address, sizeof(address));
 	ACE_OS::printf("sending address: %s\n", address);
 	int call = connector.connect(sendStream, *sendServer);
 	if (call >= 0) 	// call success
@@ -256,7 +247,7 @@ Connection::Connection(string addr, shared_ptr<Director> d)
 			// register events
 			this->reactor()->register_handler(SIGINT, this);
 			this->reactor()->register_handler(this, ACE_Event_Handler::ACCEPT_MASK);
-			this->reactor()->run_reactor_event_loop();	
+			this->reactor()->run_reactor_event_loop();
 		}
 		else
 		{
@@ -269,12 +260,6 @@ Connection::Connection(string addr, shared_ptr<Director> d)
 	}
 }
 
-/*Connection::~Connection()
-{
-	flag = false;
-	delete sendServer;
-	delete receiveServer;
-}*/
 
 int Connection::handle_input(ACE_HANDLE h)
 {
@@ -283,24 +268,28 @@ int Connection::handle_input(ACE_HANDLE h)
 	{
 	if(receiveStream.recv(msg, sizeof(msg)) > 0)
 	{
-		cout << "receive: " << msg << endl;
 		string s = string(msg);
-		
+
 		// clear msg
 		for(int i = 0; i < BUFSIZ; i++)
 		{
 			msg[i] = '\0';
 		}
-		
+
 		istringstream iss(s);
 		string action;
 		int id;
-		
+
 		if(iss >> action)
 		{
 			if(action.compare("quit") == 0)
 			{
-				director->quit();
+				if (director->isRunning){
+					director->end();
+				}
+				else {
+					director->quit();
+				}
 				handle_close(h, ACE_Reactor::CLR_MASK);
 				return success;
 			}
@@ -308,17 +297,18 @@ int Connection::handle_input(ACE_HANDLE h)
 			{
 				if(action.compare("start") == 0)
 				{
+					director->isRunning = true;
 					director->start(id); // returns when play end
-					
+
 					thread t([this, id]()
 					{
-						while(!this->director->play->play->end)	// wait until play end or stop !!!!change to CV?
+						while(!this->director->play->play->end)
 						{
 							continue;
 						}
 						// send end msg to producer
 						string msg = "end " + to_string(id) + " " + to_string(this->currId);	// stop playID directorID
-						cout << "send " << msg << endl;
+						director->isRunning = false;
 						int call = this->connector.connect(this->sendStream, *(this->sendServer));
 						if (call >= 0) 	// call success
 						{
@@ -327,7 +317,6 @@ int Connection::handle_input(ACE_HANDLE h)
 						}
 					});
 					t.detach();
-					
 					return success;
 				}
 				else if(action.compare("stop") == 0)
@@ -355,7 +344,6 @@ int Connection::handle_signal(int signum, siginfo_t*,ucontext_t*)	// get rid of 
 	director->quit();
 	// send id to Producer
 	string msg = to_string(currId);
-	cout << "send id: " << msg << endl;
 	int call = connector.connect(sendStream, *sendServer);
 	if (call >= 0) 	// call success
 	{
@@ -369,7 +357,7 @@ int Connection::handle_signal(int signum, siginfo_t*,ucontext_t*)	// get rid of 
 
 int Connection::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask mask)
 {
-	
+
 	this->reactor ()->end_reactor_event_loop();
 	this->reactor ()->close();
 	return success;
@@ -379,6 +367,12 @@ ACE_HANDLE Connection::get_handle() const
 {
 	return acceptor.get_handle();
 }
+
+Connection::~Connection(){
+	delete sendServer;
+	delete receiveServer;
+	delete react;
+};
 
 // main method of lab3 Director
 int main(int argc, char** argv)

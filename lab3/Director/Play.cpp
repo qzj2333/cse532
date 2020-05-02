@@ -29,9 +29,9 @@ void Play::recite(vector<container>::iterator& iter, unsigned int& scene_fragmen
 	unique_lock<mutex> lk(m);
 	while (scene_fragment_counter < scene_fragment_number || (scene_fragment_counter == scene_fragment_number && line_counter < iter->order))
 	{
-		cv.wait(lk, [this, iter, scene_fragment_number] 
+		cv.wait(lk, [this, iter, scene_fragment_number]
 		{
-			return ((line_counter == iter->order) && (scene_fragment_counter == scene_fragment_number)); 
+			return ((line_counter == iter->order) && (scene_fragment_counter == scene_fragment_number));
 		});
 	}
 	if (scene_fragment_counter == scene_fragment_number && line_counter == iter->order)
@@ -41,12 +41,12 @@ void Play::recite(vector<container>::iterator& iter, unsigned int& scene_fragmen
 			currCharacter = iter->characterName;
 			cout << endl << currCharacter << "." << endl;
 		}
-		cout << scene_fragment_counter << " "<<line_counter << iter->text << endl;
+		cout << iter->text << endl;
 		line_counter++;
 	}
 	else if (scene_fragment_counter > scene_fragment_number || (scene_fragment_counter == scene_fragment_number && line_counter > iter->order))
 	{
-		cerr << "counter greater than order number " << " " << scene_fragment_counter << " " << scene_fragment_number << " " << line_counter << " " << iter->order << iter->text << endl;
+		cerr << "counter greater than order number " << endl;
 	}
 	this_thread::sleep_for(0.05s);	// for stop testing
 	lk.unlock();
@@ -56,12 +56,11 @@ void Play::recite(vector<container>::iterator& iter, unsigned int& scene_fragmen
 }
 
 // Enter a character in a fragment
-int Play::enter(shared_ptr<Fragment> f)
+int Play::enter(shared_ptr<Fragment> f, bool stop)
 {
 	unique_lock<mutex> lk(m);
 	if (f->fragment_number < scene_fragment_counter)
 	{
-		lk.unlock();
 		return enter_fail;
 	}
 	else if(f->fragment_number > scene_fragment_counter)
@@ -71,46 +70,35 @@ int Play::enter(shared_ptr<Fragment> f)
 				return (scene_fragment_counter == f->fragment_number);
 		});
 	}
-	/*for(string c:characters)	// new add!!!
-	{
-		if(c == f->character_name)
-		{
-			lk.unlock();
-			return enter_fail;
-		}
-	}*/
-	cout << "[Enter " << f->character_name << ".]" << " on_stage: " << on_stage << f->filename << endl;
+	cout << "[Enter " << f->character_name << ".]" << endl;
 	on_stage++;
-	//characters.push_back(f->character_name);	// new add!!!!!!!!
-	lk.unlock();
-	//cv.notify_all();
 	return success;
 }
 
 // Exit a character in a fragment
-int Play::exit(shared_ptr<Fragment> f)
+int Play::exit(shared_ptr<Fragment> f, bool stop)
 {
 	lock_guard<mutex> lk(m);
 	if (on_stage > one)
 	{
 		on_stage--;
-		cout << "[Exit " << f->character_name << ".]" << " on_stage: " << on_stage << endl;
+		cout << "[Exit " << f->character_name << ".]" << endl;
 		exit_players++;
 		return success;
 	}
 	else if (on_stage < one)
 	{
-		cout << f->character_name << "exit fail " << on_stage << endl;
 		return exit_fail;
 	}
 	else // on_state == one
 	{
 		on_stage--;
-		cout << "[Exit " << f->character_name << ".]"<< " on_stage2: " << on_stage << endl;
+		if (!stop){
+			cout << "[Exit " << f->character_name << ".]" << endl;
+		}
 		exit_players++;
-		if(exit_players == f->num_players)	// do not change this!
+		if(exit_players == f->num_players)
 		{
-			//characters.clear();	// new add!!!!
 			scene_fragment_counter++;
 			currCharacter = "";
 			line_counter = one;
@@ -145,4 +133,3 @@ void Play::reset()
 	line_counter = one;
 	exit_players = 0;
 }
-

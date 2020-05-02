@@ -20,13 +20,14 @@ class Director
 	int max_config_lines;	// max number of config lines among all script files
 	vector<shared_ptr<SinglePlay>> plays;
 public:
+	bool isRunning;
 	vector<shared_ptr<Player>> players;	// all players
 	shared_ptr<SinglePlay> play;	// current play
 	Director(vector<string> names, int min_num_players = 0, bool flag = false);
 	void readOneScript(string scriptName);
 	void cue();
 	void start(int id);
-	void end(int id);
+	void end(int id = notValid);
 	string get_names();
 	void quit();
 };
@@ -46,7 +47,7 @@ class Connection: public ACE_Event_Handler
 	bool flag;
 public:
 	Connection(string addr, shared_ptr<Director> d);
-	//~Connection();
+	~Connection();
 	virtual int handle_input(ACE_HANDLE h = ACE_INVALID_HANDLE);
 	virtual ACE_HANDLE get_handle() const;
 	virtual int handle_signal(int signum, siginfo_t*,ucontext_t*);
